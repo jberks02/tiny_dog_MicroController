@@ -4,7 +4,7 @@ include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
 include(pico_sdk_import.cmake)
 
-project(ServoMover VERSION 1.0.0)
+project(TinyDogMicroController VERSION 1.0.0)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 set(PICO_ENABLE_CXX_EXCEPTIONS 1)

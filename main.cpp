@@ -1,5 +1,5 @@
 /*
- * Blink for Raspberry Pi Pico
+ * Tiny Dog MicroController
  *
  * @version     1.0.0
  * @author     Justin Berkshire
@@ -12,29 +12,22 @@ using namespace std;
 
 int main()
 {
+    stdio_init_all();
+
     const uint LED = PICO_DEFAULT_LED_PIN;
 
     gpio_init(LED);
 
     gpio_set_dir(LED, GPIO_OUT);
 
-    stdio_init_all();
-
-    int a = 4;
-
-    int b = 8;
-
-    int c = a + b; 
-
-    cout << c << '\n';
+    gpio_put(LED, 1);
 
     while (true)
     {
-        cout << "Deadly Virus";
         gpio_put(LED, 1);
-        sleep_ms(a * 100);
+        sleep_ms(500);
         gpio_put(LED, 0);
-        sleep_ms(b * 100);
+        sleep_ms(500);
     }
 
     return 0;
