@@ -19,6 +19,7 @@
 #include <cstdlib>
 #include <cstdint>
 #include <cstring>
+#include <cmath>
 
 /*
  * PICO HEADERS
@@ -30,6 +31,11 @@
 #include "hardware/spi.h"
 #include "hardware/adc.h"
 #include "hardware/uart.h"
+
+//My HEADERS
+#include "./modules/TriangleTracker.cpp"
+#include "./modules/positionTrack.cpp"
+#include "./modules/PCA9685.cpp"
 
 #ifdef __cplusplus
 extern "C"
