@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <cstring>
 #include <cmath>
+#include <map>
 
 /*
  * PICO HEADERS
@@ -33,6 +34,7 @@
 #include "hardware/uart.h"
 
 //My HEADERS
+#include "./modules/utilityClasses.cpp"
 #include "./modules/TriangleTracker.cpp"
 #include "./modules/positionTrack.cpp"
 #include "./modules/PCA9685.cpp"
