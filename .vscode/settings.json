@@ -2,5 +2,13 @@
     "cmake.environment": {
         "PICO_SDK_PATH": "/Users/justinberkshire/EmbeddedProjects/pico-sdk"
     },
-    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "files.associations": {
+        "vector": "cpp",
+        "initializer_list": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "enabled",
+    "C_Cpp.default.intelliSenseMode": "gcc-arm",
+    "C_Cpp.inlayHints.autoDeclarationTypes.enabled": true,
+    "C_Cpp.intelliSenseEngineFallback": "enabled"
 }

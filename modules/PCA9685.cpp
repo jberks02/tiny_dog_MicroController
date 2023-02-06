@@ -143,7 +143,7 @@ public:
             return;
 
         if (angle > sAngleMax)
-            angle = 180.0;
+            angle = 179.0;
         if (angle < sAngleMin)
             angle = 0.0;
         if (servo > 15)
@@ -155,6 +155,7 @@ public:
         int newServoMills = (angle * 2.2755) + 102;
 
         uint8_t highByte[1] = {(newServoMills >> 8) & 0x01};
+
         uint8_t lowByte[1] = {newServoMills & 0xFF};
         uint8_t highByteServoReg = servoRegister + 1;
 
