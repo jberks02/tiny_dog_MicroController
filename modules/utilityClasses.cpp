@@ -13,7 +13,7 @@ class MovementSeries {
 class MovementSeriesExample {
     public: string name = "Forward"; // descriptive name to describe what this series will do. 
     string type = "Progressive";//a simple description some movements will be progressive, some will be regressive, some may be just to lean or animate
-    int millisecondDelay = 50; // this will be the delay between each coordinate progression
+    int millisecondDelay = 200; // this will be the delay between each coordinate progression
     vector<vector <int>> series = {
         {0,40,0},
         {70, 45, 0},
