@@ -100,11 +100,6 @@ public:
         vector<int> standardZero = {0,0};
         // vector<int> endEffectorPointTranslation;
         xyTriangle.getNewEndEffectorCoordinate(&standardZero, xydistanceToOldPoint);
-        int tx = standardZero[0];
-        int ty = standardZero[1];
-        int nx = newEndEffectorPoint[0];
-        int ny = newEndEffectorPoint[1];
-        cout << ty << tx << nx << ny << endl;
         // set second new servo angle for servo 0
         // use new XYcLength is used for side a of new Triangle
         //  use existing a length as b length

@@ -59,7 +59,7 @@ int main() {
             sleep_ms(series.millisecondDelay);
         }
         gpio_put(LED, 0);
-        // sleep_ms(1000);
+        sleep_ms(1000);
     }
 
     return 0;
