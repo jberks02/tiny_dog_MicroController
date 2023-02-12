@@ -98,13 +98,15 @@ public:
         xyTriangle.setSideCLength(newXYcLength);
         floatContainer[2] = convertCAngleOnNormalTriangle(xyTriangle.triangleAngles[2]);
         vector<int> standardZero = {0,0};
+        // vector<int> endEffectorPointTranslation;
+        xyTriangle.getNewEndEffectorCoordinate(&standardZero, xydistanceToOldPoint);
         // set second new servo angle for servo 0
         // use new XYcLength is used for side a of new Triangle
         //  use existing a length as b length
         //  c is the distance from the old point to the new point
         double distanceBetweenNewAndOldXYend = calculateDistance(standardZero, xyNewCoordinate);
         // angle c is contained within this triangle.
-        if (distanceBetweenNewAndOldXYend > 0.0 & newEndEffectorPoint[0] != 0)
+        if (distanceBetweenNewAndOldXYend > 0.0 & standardZero[0] != 0)
         {
             TriangleTracker servoOneRotationTriangle(newXYcLength, xydistanceToOldPoint, distanceBetweenNewAndOldXYend);
             cout << to_string(newXYcLength) << to_string(distanceBetweenNewAndOldXYend) << endl;
@@ -153,6 +155,6 @@ public:
         };
         // newServoAngles->assign(floatContainer, floatContainer + 3);
 
-        xyTriangle.setSideCLength(calculateDistance(xy[0], xy[2]));
+        // xyTriangle.setSideCLength(calculateDistance(xy[0], xy[2]));
     };
 };
