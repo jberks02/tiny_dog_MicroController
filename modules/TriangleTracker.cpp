@@ -82,11 +82,40 @@ public:
         float degreeConversion = degreeOfAdjacentAngle * (180 / 3.1415);
         return degreeConversion; // * (180 / 3.1415) turns radians into degrees.
     }
-    void getNewEndEffectorCoordinate(vector<int> *cCordinate) {
-        vector<int> tempHolder = {0,0};
-        tempHolder[1] = (pow(sideLengths[0], 2) + pow(sideLengths[2], 2) - pow(sideLengths[1], 2))/(2 * sideLengths[0]);
-        tempHolder[0] = sqrt(pow(sideLengths[2], 2) - tempHolder[1]);
-        // if(tempHolder[0] > 0) tempHolder[0] = tempHolder[0] * -1;
-        cCordinate->swap(tempHolder);
+    void getNewEndEffectorCoordinate(vector<int> *cCordinate, double oldDistance)
+    {
+        // Degrees × (π / 180) = Radians
+        // Radians  × (180 / π) = Degrees
+        // float oppositeAngle;
+        float xOffset;
+        float yOffset;
+        float oppositeAngle;
+
+        vector<int> coordinates = {0, 0};
+
+        if (sideLengths[2] > oldDistance)
+        {
+            // get angle used for sin calculations in degrees
+            oppositeAngle = 180 - (90 + triangleAngles[1]);
+            // convert to radians
+            oppositeAngle = oppositeAngle * (M_PI / 180);
+        }
+        else
+        {
+            // create angle adjacent to known angle 2 and 90 degree angle
+            float angle4 = 180 - triangleAngles[1];
+            // get new opposite angle
+            oppositeAngle = 180 - (90 + angle4);
+            // convert to radians
+            oppositeAngle = oppositeAngle * (M_PI / 180);
+        }
+
+        xOffset = sin(oppositeAngle) * sideLengths[2];
+        yOffset = sqrt(pow(sideLengths[2], 2) - pow(xOffset, 2));
+
+        coordinates[0] = sideLengths[2] > oldDistance ? 0 - xOffset : 0 + xOffset;
+        coordinates[1] = 110 - yOffset;
+
+        cCordinate->swap(coordinates);
     }
 };
