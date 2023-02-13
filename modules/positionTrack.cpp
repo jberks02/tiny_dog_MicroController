@@ -94,11 +94,16 @@ public:
         // First new Servo Angle Set for servo 3
         // vector<float> newServoAngles = {0.f, 0.f, 0.f};
         vector<int> xyNewCoordinate = {newEndEffectorPoint[0], newEndEffectorPoint[1]};
+        vector<int> newYZcoordinate = {newEndEffectorPoint[1], newEndEffectorPoint[2]};
         double newXYcLength = calculateDistance(xy[0], xyNewCoordinate);
-        xyTriangle.setSideCLength(newXYcLength);
+        double newyzEndYPlaneLength = calculateDistance(yz[1], newYZcoordinate);
+        //if z penetration is greater than y penetration, we need to go to that length instead to get to the correct position
+        xyTriangle.setSideCLength(newXYcLength > newyzEndYPlaneLength ? newXYcLength : newyzEndYPlaneLength);
+        // xyTriangle.setSideCLength(newXYcLength);
         floatContainer[2] = convertCAngleOnNormalTriangle(xyTriangle.triangleAngles[2]);
         vector<int> standardZero = {0,0};
-        // vector<int> endEffectorPointTranslation;
+        // need to take old end effector point to not assume position starts at 0, 0
+        // needs to also have control to ensure a right triangle is created. 
         xyTriangle.getNewEndEffectorCoordinate(&standardZero, xydistanceToOldPoint);
         // set second new servo angle for servo 0
         // use new XYcLength is used for side a of new Triangle
@@ -106,10 +111,12 @@ public:
         //  c is the distance from the old point to the new point
         double distanceBetweenNewAndOldXYend = calculateDistance(standardZero, xyNewCoordinate);
         // angle c is contained within this triangle.
-        if (distanceBetweenNewAndOldXYend > 0.0 & standardZero[0] != 0)
+        int currentAndDestinationXcoordinateDifference = standardZero[0] - xyNewCoordinate[0];
+        
+        if (currentAndDestinationXcoordinateDifference != 0)
         {
             TriangleTracker servoOneRotationTriangle(newXYcLength, xydistanceToOldPoint, distanceBetweenNewAndOldXYend);
-            cout << to_string(newXYcLength) << to_string(distanceBetweenNewAndOldXYend) << endl;
+
             if (xyNewCoordinate[0] > 0)
             {
                 floatContainer[0] = ServoAngles[0] + servoOneRotationTriangle.triangleAngles[2];
@@ -125,7 +132,6 @@ public:
         }
         // set new servo angle for servo 2, z axis
         //  a is distance to new point, b is distance to old point, c is distance between new and old
-        vector<int> newYZcoordinate = {newEndEffectorPoint[1], newEndEffectorPoint[2]};
         double distanceToNewPoint = calculateDistance(yz[0], newYZcoordinate);
         double distanceToOldPoint = yzTriangle.sideLengths[1];
         double distanceBetweenPoints = calculateDistance(newYZcoordinate, yz[2]);
@@ -153,8 +159,7 @@ public:
         for(int i = 0; i < 3; i++) {
             newServoAngles->push_back(floatContainer[i]);
         };
-        // newServoAngles->assign(floatContainer, floatContainer + 3);
 
-        // xyTriangle.setSideCLength(calculateDistance(xy[0], xy[2]));
+        xyTriangle.setSideCLength(calculateDistance(xy[0], xy[2]));
     };
 };
