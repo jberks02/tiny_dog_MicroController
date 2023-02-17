@@ -11,12 +11,12 @@ using namespace std;
 class ExtensionTracker
 {
 private:
-    vector<vector<int>> yz;
+    vector<vector<float>> yz;
 
 private:
-    vector<vector<int>> xy;
+    vector<vector<float>> xy;
 private:
-    vector<int> coordinate;
+    vector<float> coordinate;
 
 private:
     vector<float> ServoAngles;
@@ -31,12 +31,12 @@ private:
     TriangleTracker yzTriangle = TriangleTracker(1.0, 1.0, 1.0);
 
 public: ExtensionTracker(
-        vector<vector<int>> yzPlane,
-        vector<vector<int>> xyPlane,
-        vector<int> defaultCoordinate,
+        vector<vector<float>> yzPlane,
+        vector<vector<float>> xyPlane,
+        vector<float> defaultCoordinate,
         vector<float> defaultServoAngles,
         vector<char> servoMovementTypes,
-        vector<vector<int>> servoCoordinates)
+        vector<vector<float>> servoCoordinates)
     {
         yz = yzPlane;
         xy = xyPlane;
@@ -58,7 +58,7 @@ public: ExtensionTracker(
     }
     // always pass with ordering with x, then y
 private:
-    double calculateDistance(vector<int> positionOne, vector<int> positionTwo)
+    double calculateDistance(vector<float> positionOne, vector<float> positionTwo)
     {
         int subtractOne = positionOne[0] - positionTwo[0];
         int subtractTwo = positionOne[1] - positionTwo[1];
@@ -86,22 +86,22 @@ float findHypotneuse(double a, double b) {
     return hypotenuese;
 }
 public:
-    void getServoAnglesForPoint(vector<int> newEndEffectorPoint, vector<float> *newServoAngles)
+    void getServoAnglesForPoint(vector<float> newEndEffectorPoint, vector<float> *newServoAngles)
     {
         newServoAngles->clear();
         double floatContainer[3] = {0.0, 0.0, 0.0};
         double xydistanceToOldPoint = xyTriangle.sideLengths[2];
         // First new Servo Angle Set for servo 3
         // vector<float> newServoAngles = {0.f, 0.f, 0.f};
-        vector<int> xyNewCoordinate = {newEndEffectorPoint[0], newEndEffectorPoint[1]};
-        vector<int> newYZcoordinate = {newEndEffectorPoint[1], newEndEffectorPoint[2]};
+        vector<float> xyNewCoordinate = {newEndEffectorPoint[0], newEndEffectorPoint[1]};
+        vector<float> newYZcoordinate = {newEndEffectorPoint[1], newEndEffectorPoint[2]};
         double newXYcLength = calculateDistance(xy[0], xyNewCoordinate);
         double newyzEndYPlaneLength = calculateDistance(yz[1], newYZcoordinate);
         //if z penetration is greater than y penetration, we need to go to that length instead to get to the correct position
         xyTriangle.setSideCLength(newXYcLength > newyzEndYPlaneLength ? newXYcLength : newyzEndYPlaneLength);
         // xyTriangle.setSideCLength(newXYcLength);
         floatContainer[2] = convertCAngleOnNormalTriangle(xyTriangle.triangleAngles[2]);
-        vector<int> standardZero = {0,0};
+        vector<float> standardZero = {0,0};
         // need to take old end effector point to not assume position starts at 0, 0
         // needs to also have control to ensure a right triangle is created. 
         xyTriangle.getNewEndEffectorCoordinate(&standardZero, xydistanceToOldPoint);

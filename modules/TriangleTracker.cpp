@@ -20,7 +20,7 @@ public:
     }
 
 private:
-    double calculateDistance(int positionOne[2], int positionTwo[2])
+    double calculateDistance(float positionOne[2], float positionTwo[2])
     {
         int subtractOne = positionOne[0] - positionTwo[0];
         int subtractTwo = positionOne[1] - positionTwo[1];
@@ -72,7 +72,7 @@ public:
         createAngles();
     }
 
-    float returnNewCangle(int a, int b, int c)
+    float returnNewCangle(float a, float b, float c)
     {
         // broken out into steps to make readable
         double numerator = pow(a, 2) + pow(b, 2) - pow(c, 2);
@@ -82,7 +82,7 @@ public:
         float degreeConversion = degreeOfAdjacentAngle * (180 / 3.1415);
         return degreeConversion; // * (180 / 3.1415) turns radians into degrees.
     }
-    void getNewEndEffectorCoordinate(vector<int> *cCordinate, double oldDistance)
+    void getNewEndEffectorCoordinate(vector<float> *cCordinate, double oldDistance)
     {
         // Degrees × (π / 180) = Radians
         // Radians  × (180 / π) = Degrees
@@ -91,7 +91,7 @@ public:
         float yOffset;
         float oppositeAngle;
 
-        vector<int> coordinates = {0, 0};
+        vector<float> coordinates = {0.f, 0.f};
 
         if (sideLengths[2] > oldDistance)
         {

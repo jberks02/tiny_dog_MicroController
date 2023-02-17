@@ -27,12 +27,12 @@ int main() {
     ServoController.servoSetAngle(90, 1);
     ServoController.servoSetAngle(90, 2);
 
-    vector<vector<int>> yzPlane = {{110, -33}, {110, 0}, {0,0}};
-    vector<vector<int>> xyPlane = {{0,110}, {-80,110}, {0,0}};
-    vector<int> endaffectorCoordinate = {0,0,0};
-    vector<float> servoAngles = {90,90,90};
+    vector<vector<float>> yzPlane = {{110.f, -33.f}, {110.f, 0.f}, {0.f,0.f}};
+    vector<vector<float>> xyPlane = {{0.f,110.f}, {-80.f,110.f}, {0,0.f}};
+    vector<float> endaffectorCoordinate = {0.f,0.f,0.f};
+    vector<float> servoAngles = {90.f,90.f,90.f};
     vector<char> movementTypes = {'r', 'l', 'r'};
-    vector<vector<int>> servoPlacement = {{0, 110, 0}, {0, 110, 0}, {0, 110, -33}};
+    vector<vector<float>> servoPlacement = {{0.f, 110.f, 0.f}, {0.f, 110.f, 0.f}, {0.f, 110.f, -33.f}};
 
     ExtensionTracker rfLeg(yzPlane, xyPlane, endaffectorCoordinate, servoAngles, movementTypes, servoPlacement);
 
@@ -40,6 +40,10 @@ int main() {
 
     vector<float> legFootForward;
     MovementSeriesExample series;
+
+    MovementSeries test("test", "transition", 1, {{0.f,50.f,0.f}, {50.f, 0.f, 0.f}, {-50.f, 0.f, 0.f}});
+
+    test.increaseResolution(5);
 
     ServoController.servoSetAngle(90, 0);
     ServoController.servoSetAngle(90, 1);
@@ -50,13 +54,16 @@ int main() {
     {
         gpio_put(LED, 1);
         sleep_ms(1000);
-        for (auto & coordinate : series.series) {
+        for (auto & coordinate : test.series) {
             rfLeg.getServoAnglesForPoint(coordinate, &legFootForward);
             for (int i = 0; i < 3; i++)
             {
                 ServoController.servoSetAngle(legFootForward[i], i);
             }
+            float things[3] = {coordinate[0], coordinate[1], coordinate[2]};
+            float newAngles[3] = {legFootForward[0], legFootForward[1], legFootForward[2]};
             sleep_ms(series.millisecondDelay);
+            cout << things[0] << things[1] << things[2] << newAngles[0] << newAngles[1] << newAngles[2] << endl;
         }
         gpio_put(LED, 0);
         sleep_ms(1000);
