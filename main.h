@@ -34,6 +34,7 @@
 #include "hardware/uart.h"
 
 //My HEADERS
+#include "./modules/utilityFunctions.cpp"
 #include "./modules/utilityClasses.cpp"
 #include "./modules/TriangleTracker.cpp"
 #include "./modules/positionTrack.cpp"

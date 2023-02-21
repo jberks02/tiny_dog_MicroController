@@ -10,7 +10,7 @@
 #include "main.h"
 using namespace std;
 
-int main() {
+ int main() {
     stdio_init_all();
 
     const uint LED = PICO_DEFAULT_LED_PIN;
@@ -23,43 +23,39 @@ int main() {
 
     PCA9685 ServoController(0.f, 181.f, 64, 0, 1);
 
-    ServoController.servoSetAngle(90, 0);
-    ServoController.servoSetAngle(90, 1);
-    ServoController.servoSetAngle(90, 2);
+    vector<vector<float>> yzPlane = {{86.61356, -33.f}, {86.61356, 0.f}, {0.f, 0.f}};
+    vector<vector<float>> xyPlane = {{0.f, 86.61356}, {-80.f, 86.61356}, {0, 0.f}};
+    vector<float> endaffectorCoordinate = {0.f,0.f,0.f};
+    vector<PositioningServo> servos = {PositioningServo(0, 'r', 90.f, {0.f, 86.61356, 0.f}), PositioningServo(2, 'l', 32.f, {-80.f, 86.61356, 0.f}, "quadratic"), PositioningServo(1, 'r', 90.f, {0.f, 86.61356, -33.f})}; // {0.f, 110.f, 0.f}, {0.f, 110.f, -33.f}
 
-    vector<vector<int>> yzPlane = {{110, -33}, {110, 0}, {0,0}};
-    vector<vector<int>> xyPlane = {{0,110}, {-80,110}, {0,0}};
-    vector<int> endaffectorCoordinate = {0,0,0};
-    vector<float> servoAngles = {90,90,90};
-    vector<char> movementTypes = {'r', 'l', 'r'};
-    vector<vector<int>> servoPlacement = {{0, 110, 0}, {0, 110, 0}, {0, 110, -33}};
-
-    ExtensionTracker rfLeg(yzPlane, xyPlane, endaffectorCoordinate, servoAngles, movementTypes, servoPlacement);
-
-    sleep_ms(1000);
-
+    ExtensionTracker rfLeg(yzPlane, xyPlane, endaffectorCoordinate, servos);
     vector<float> legFootForward;
-    MovementSeriesExample series;
 
-    ServoController.servoSetAngle(90, 0);
-    ServoController.servoSetAngle(90, 1);
-    ServoController.servoSetAngle(90, 2);
+    rfLeg.getServoAnglesForPoint({0.f,0.f,0.f}, &legFootForward);
+
+    for(int i = 0; i < 3; i++) {
+        ServoController.servoSetAngle(legFootForward[i], i);
+    }
+
+    MovementSeries test("test", "transition", 30, {{0.f, 20.f, -60.f}, {90.f, -20.f, 60.f}, {-60.f, -20.f, 0.f}}); //{0.f,20.f,0.f},
+
+    test.increaseResolution(5);
     sleep_ms(500);
 
     while (true)
     {
         gpio_put(LED, 1);
-        sleep_ms(1000);
-        for (auto & coordinate : series.series) {
+        // sleep_ms(1000);
+        for (auto & coordinate : test.series) {
             rfLeg.getServoAnglesForPoint(coordinate, &legFootForward);
             for (int i = 0; i < 3; i++)
             {
                 ServoController.servoSetAngle(legFootForward[i], i);
             }
-            sleep_ms(series.millisecondDelay);
+            sleep_ms(test.millisecondDelay);
         }
         gpio_put(LED, 0);
-        sleep_ms(1000);
+        // sleep_ms(1000);
     }
 
     return 0;
