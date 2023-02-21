@@ -6,7 +6,9 @@
     "files.associations": {
         "vector": "cpp",
         "initializer_list": "cpp",
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "deque": "cpp",
+        "string": "cpp"
     },
     "C_Cpp.errorSquiggles": "enabled",
     "C_Cpp.default.intelliSenseMode": "gcc-arm",
