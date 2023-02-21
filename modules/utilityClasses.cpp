@@ -145,39 +145,3 @@ public:
         exponentialFactors['c'] = factors['c'];
     }
 };
-
-struct Plane
-{
-    vector<float[3]> plane;
-    vector<Plane> connections;
-};
-//Define a static 3d object through sending vectors of face coordinates
-//it is assumed that points provided for planes will be connected points one after the other.
-class Body {
-public:
-    vector<vector<float[3]>> faces;
-    vector<PositioningServo> *connectedMotors;
-    Plane *root = NULL;
-    Body(vector<vector<float[3]>> faces) {
-        this->faces = faces;
-        verifyFacesConnect();
-    }
-    void createPlaneLinkedList(vector<float[3]> initialPlane) {
-        root = new Plane;
-        root->plane = initialPlane;
-    }
-    void traverseAndAssign(vector<float[3]> newPlane) {
-        
-    }
-    int verifyFacesConnect() {
-        vector<int> indexesWhereNoConnectWasFound;
-        for (auto &face : faces)
-        {
-            if (root == NULL) {
-                createPlaneLinkedList(face);
-                continue;
-            };
-            traverseAndAssign(face);
-        }
-    }
-};
