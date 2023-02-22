@@ -85,9 +85,9 @@ public:
         float yOffset;
         float oppositeAngle;
 
-        vector<float> coordinates = {0.f, 0.f, 0.f};
-
-        if (sideLengths[2] > oldDistance)
+        vector<float>
+            coordinates = {0.f, 0.f, 0.f};
+        if(triangleAngles[1] < 90.f)
         {
             // get angle used for sin calculations in degrees
             oppositeAngle = 180 - (90 + triangleAngles[1]);
@@ -106,8 +106,7 @@ public:
 
         xOffset = sin(oppositeAngle) * sideLengths[2];
         yOffset = sqrt(pow(sideLengths[2], 2) - pow(xOffset, 2));
-
-        coordinates[0] = sideLengths[2] > oldDistance ? 0 - xOffset : 0 + xOffset;
+        coordinates[0] = triangleAngles[1] < 90.f ? 0 -xOffset : 0 + xOffset;
         coordinates[1] = 110 - yOffset;
 
         cCordinate->swap(coordinates);
