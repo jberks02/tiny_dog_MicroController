@@ -48,26 +48,31 @@ private:
     }
 };
 
+
 class PositioningServo
 {
 public:
     int servoIndex;
     char movementType;
+    string motorType;
     float defaultAngle;
+    float currentAngle;
     bool inverted;
     string conversionType;
     vector<float> servoPosition;
     map<char, float> quadraticEquationFactors{{'a', -0.02036}, {'b', 6.7478}, {'c', -214.8957}};
     map<char, float> linearFactors{{'m', 4.f}, {'b', 0}};
     map<char, float> exponentialFactors{{'a', 1.1}, {'b', -1}, {'c', -42}};
-    PositioningServo(int servoIndex, char movementType, float defaultAngle, vector<float> servoPosition, string conversionType = "default", bool inverted = false)
+    PositioningServo(int servoIndex, char movementType, float defaultAngle, vector<float> servoPosition, string conversionType = "default", bool inverted = false, string motorType = "servo")
     {
         this->servoIndex = servoIndex;
         this->movementType = movementType;
         this->defaultAngle = defaultAngle;
+        this->currentAngle = defaultAngle;
         this->conversionType = conversionType;
         this->servoPosition.swap(servoPosition);
         this->inverted = inverted;
+        this->motorType = motorType;
     }
 
 private:
@@ -143,5 +148,35 @@ public:
         exponentialFactors['a'] = factors['a'];
         exponentialFactors['b'] = factors['b'];
         exponentialFactors['c'] = factors['c'];
+    }
+};
+
+struct extensionCommand {
+    string name;
+    vector<float> coordinate;
+    uint64_t postDelay;
+    uint64_t executionMoment;
+    extensionCommand(string n, vector<float> c, uint64_t pd)
+    {
+        name = n;
+        coordinate = c;
+        postDelay = pd;
+    }
+};
+
+struct servoCommand {
+    int servo;
+    float angle;
+    uint64_t postDelay;
+};
+
+struct extensionSeriesCommand {
+    string extensionName;
+    string seriesName;
+    int iterations;
+    extensionSeriesCommand(string name, string sname, int i) {
+        extensionName = name;
+        seriesName = sname;
+        iterations = i;
     }
 };

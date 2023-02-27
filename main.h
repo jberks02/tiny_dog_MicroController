@@ -32,13 +32,15 @@
 #include "hardware/spi.h"
 #include "hardware/adc.h"
 #include "hardware/uart.h"
+#include "pico/multicore.h"
 
 //My HEADERS
-#include "./modules/utilityFunctions.cpp"
-#include "./modules/utilityClasses.cpp"
+#include "./utilities/utilityFunctions.cpp"
+#include "./utilities/utilityClasses.cpp"
 #include "./modules/TriangleTracker.cpp"
-#include "./modules/positionTrack.cpp"
-#include "./modules/PCA9685.cpp"
+#include "./modules/extensionTracker.cpp"
+#include "./controllers/PCA9685.cpp"
+#include "./controllers/extensionController.cpp"
 
 #ifdef __cplusplus
 extern "C"
