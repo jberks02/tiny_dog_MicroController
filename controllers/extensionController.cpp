@@ -6,9 +6,9 @@ class ExtensionController
 private:
     vector<ExtensionTracker> endEffectors;
     vector<extensionSeriesCommand> extensionSeriesCall;
-    PCA9685 servoController;
+    PCA9685 *servoController = NULL;
 public:
-    void setServoController(PCA9685 servoController) {
+    void setServoController(PCA9685 *servoController) {
         this->servoController = servoController;
     }
     int setNewExtensionTracker(ExtensionTracker extt)
@@ -48,7 +48,7 @@ public:
                 for(auto extension : endEffectors) {
                     extension.checkAndSetNewCoordinate();
                     for(int i = 0; i < 3; i++) {
-                        servoController.servoSetAngle(extension.mServos[i].currentAngle, extension.mServos[i].servoIndex);
+                        servoController->servoSetAngle(extension.mServos[i].currentAngle, extension.mServos[i].servoIndex);
                     }
                 }
             }

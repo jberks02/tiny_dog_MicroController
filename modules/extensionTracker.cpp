@@ -96,7 +96,7 @@ public:
             {
                 for (int i = 0; i < iterations; i++)
                 {
-                    for (auto coord : set.series)
+                    for (auto &coord : set.series)
                     {
                         addNewExtensionCommand(extensionCommand(set.name, coord, set.millisecondDelay));
                     }
