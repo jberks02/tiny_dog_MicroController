@@ -45,10 +45,14 @@ public:
         try {
             while (true)
             {
-                for(auto extension : endEffectors) {
+                for(auto &extension : endEffectors) {
                     extension.checkAndSetNewCoordinate();
+                    for(auto &servo : extension.mServos) {
+                        servoController->servoSetAngle(servo.currentAngle, servo.servoIndex);
+                    }
+                    float coord[3] = {extension.currentPosition[0], extension.currentPosition[1], extension.currentPosition[2]};
                     for(int i = 0; i < 3; i++) {
-                        servoController->servoSetAngle(extension.mServos[i].currentAngle, extension.mServos[i].servoIndex);
+                        cout << coord[i] << endl;
                     }
                 }
             }

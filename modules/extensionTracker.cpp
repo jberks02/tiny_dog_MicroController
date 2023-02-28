@@ -13,20 +13,17 @@ class ExtensionTracker
 private:
     vector<vector<float>> yz;
     vector<vector<float>> xy;
-    vector<float> coordinate;
-    vector<float> currentPosition;
     vector<float> ServoAngles;
     TriangleTracker xyTriangle = TriangleTracker({{2.f, 0.f}, {1.f, 2.f}, {0.f, 0.f}});
     TriangleTracker yzTriangle = TriangleTracker({{2.f, 0.f}, {1.f, 2.f}, {0.f, 0.f}});
     // vector<servoCommand> servoCalls;
     uint64_t startUp = time_us_64();
     vector<extensionCommand> extensionCalls;
-    uint64_t nextExecution;
-
+    vector<float> coordinate;
 public:
     vector<PositioningServo> mServos;
     vector<MovementSeries> MovementSets;
-
+    vector<float> currentPosition;
 public:
     string name;
 
@@ -90,6 +87,7 @@ public:
     }
     void prepareCommands(string name, int iterations)
     {
+        startUp = time_us_64();
         for (auto set : MovementSets)
         {
             if (set.name == name)
@@ -98,27 +96,31 @@ public:
                 {
                     for (auto &coord : set.series)
                     {
-                        addNewExtensionCommand(extensionCommand(set.name, coord, set.millisecondDelay));
+                        extensionCommand com(set.name, coord, set.millisecondDelay);
+                        addNewExtensionCommand(com);
                     }
                 }
             }
         }
     }
-    void checkAndSetNewCoordinate() {
+    void checkAndSetNewCoordinate()
+    {
         uint64_t now = time_us_64();
 
-        if(extensionCalls.size() == 0) return;
+        if (extensionCalls.size() == 0) {
+            return;
+        };
+            
 
-        if(now >= extensionCalls[0].executionMoment) {
-            extensionCommand latestCommand = extensionCalls[0];
-            extensionCalls.erase(extensionCalls.begin());
-            currentPosition = latestCommand.coordinate;
+        uint64_t nextCall = extensionCalls[0].executionMoment;
+
+        if (now > nextCall)
+        {
+            currentPosition = extensionCalls[0].coordinate;
             vector<float> newAngles;
-            getServoAnglesForPoint(latestCommand.coordinate, &newAngles);
-            for(int i = 0; i < 3; i++) {
-                mServos[i].currentAngle = newAngles[i];
-            }
-        }
+            getServoAnglesForPoint(extensionCalls[0].coordinate, &newAngles);
+            extensionCalls.erase(extensionCalls.begin());
+        };
     }
     void addMovementSeries(MovementSeries newMove)
     {
@@ -137,13 +139,13 @@ public:
         float newyzEndYPlaneLength = calculateDistance(yz[1], newYZcoordinate);
         float linearTranslationLength = newXYcLength > newyzEndYPlaneLength ? newXYcLength : newyzEndYPlaneLength;
         floatContainer[1] = findLinearTranslation(&xyTriangle, linearTranslationLength, &standardZero);
-        floatContainer[1] = mServos[1].convert(standardZero[1], xyNewCoordinate[1], floatContainer[mServos[1].servoIndex]);
+        floatContainer[1] = mServos[1].convert(standardZero[1], xyNewCoordinate[1], floatContainer[1]);
         // ensure that relevant points need rotation before starting process;
         float currentAndDestinationXcoordinateDifference = standardZero[0] - xyNewCoordinate[0];
         if (currentAndDestinationXcoordinateDifference != 0)
         {
             floatContainer[0] = findRotationTranslation(mServos[0].servoPosition, xyNewCoordinate, standardZero);
-            floatContainer[0] = mServos[0].convert(standardZero[0], xyNewCoordinate[0], floatContainer[mServos[0].servoIndex]);
+            floatContainer[0] = mServos[0].convert(standardZero[0], xyNewCoordinate[0], floatContainer[0]);
         }
         else
         {
@@ -153,7 +155,7 @@ public:
         if (curAndDestDifferenceOnZ != 0)
         {
             floatContainer[2] = findRotationTranslation({mServos[2].servoPosition[1], mServos[2].servoPosition[2]}, newYZcoordinate, {coordinate[1], coordinate[2]});
-            floatContainer[2] = mServos[2].convert(standardZero[2], newYZcoordinate[1], floatContainer[mServos[2].servoIndex]);
+            floatContainer[2] = mServos[2].convert(standardZero[2], newYZcoordinate[1], floatContainer[2]);
         }
         else
         {
@@ -162,6 +164,7 @@ public:
         for (int i = 0; i < 3; i++)
         {
             newServoAngles->push_back(floatContainer[i]);
+            mServos[i].currentAngle = floatContainer[i];
         };
 
         xyTriangle.setSideCLength(calculateDistance(xy[0], xy[2]));
