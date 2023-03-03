@@ -36,7 +36,7 @@ int main()
     vector<vector<float>> yzPlane = {{86.61356, -33.f}, {86.61356, 0.f}, {0.f, 0.f}};
     vector<vector<float>> xyPlane = {{0.f, 86.61356}, {-80.f, 86.61356}, {0, 0.f}};
     vector<float> endaffectorCoordinate = {0.f, 0.f, 0.f};
-    vector<PositioningServo> servos = {PositioningServo(0, 'r', 90.f, {0.f, 86.61356, 0.f}), PositioningServo(1, 'l', 32.f, {-80.f, 86.61356, 0.f}, "quadratic"), PositioningServo(2, 'r', 90.f, {0.f, 86.61356, -33.f})}; // {0.f, 110.f, 0.f}, {0.f, 110.f, -33.f}
+    vector<PositioningServo> servos = {PositioningServo(0, 'r', 90.f, {0.f, 86.61356, 0.f}), PositioningServo(1, 'l', 32.f, {-80.f, 86.61356, 0.f}, "quadratic"), PositioningServo(2, 'r', 90.f, {0.f, 86.61356, -33.f}, "default", true)}; // {0.f, 110.f, 0.f}, {0.f, 110.f, -33.f}
 
     ExtensionTracker rfLeg("rightFront", yzPlane, xyPlane, endaffectorCoordinate, servos);
 
@@ -51,6 +51,7 @@ int main()
     controller.setNewMovementSeriesForExtension("rightFront", test);
     controller.setNewMovementSeriesForExtension("rightFront", test2);
 
+    multicore_reset_core1();
     multicore_launch_core1(secondaryLoop);
 
     while (true)
@@ -61,11 +62,11 @@ int main()
         controller.prepareNextSeries(newCommand);
         controller.prepareNextSeries(dupCom);
         controller.prepareNextSeries(newCommand);
-        sleep_ms(1000 * 30);
+        sleep_ms(1000 * 10);
         gpio_put(LED, 0);
         extensionSeriesCommand nextCommand("rightFront", "test", 3);
         controller.prepareNextSeries(nextCommand);
-        sleep_ms(1000 * 30);
+        sleep_ms(1000 * 10);
     }
 };
 
