@@ -13,15 +13,23 @@ class ExtensionTracker
 private:
     vector<vector<float>> yz;
     vector<vector<float>> xy;
-    vector<float> coordinate;
     vector<float> ServoAngles;
     TriangleTracker xyTriangle = TriangleTracker({{2.f, 0.f}, {1.f, 2.f}, {0.f, 0.f}});
     TriangleTracker yzTriangle = TriangleTracker({{2.f, 0.f}, {1.f, 2.f}, {0.f, 0.f}});
+    // vector<servoCommand> servoCalls;
+    uint64_t startUp = time_us_64();
+    vector<extensionCommand> extensionCalls;
+    vector<float> coordinate;
+public:
     vector<PositioningServo> mServos;
     vector<MovementSeries> MovementSets;
+    vector<float> currentPosition;
+public:
+    string name;
 
 public:
     ExtensionTracker(
+        string name,
         vector<vector<float>> yzPlane,
         vector<vector<float>> xyPlane,
         vector<float> defaultCoordinate,
@@ -34,6 +42,7 @@ public:
         coordinate = defaultCoordinate;
         xyTriangle.setNewCoordinates(xyPlane);
         yzTriangle.setNewCoordinates(yzPlane);
+        this->name = name;
     }
     // always pass with ordering with x, then y
 private:
@@ -65,6 +74,54 @@ private:
     }
 
 public:
+    void addNewExtensionCommand(extensionCommand newCoordinate)
+    {
+
+        uint64_t nextIndex = extensionCalls.size();
+
+        uint64_t runTime = newCoordinate.postDelay * (nextIndex > 0 ? nextIndex : 1) * 1000;
+
+        newCoordinate.executionMoment = startUp + runTime;
+
+        extensionCalls.push_back(newCoordinate);
+    }
+    void prepareCommands(string name, int iterations)
+    {
+        startUp = time_us_64();
+        for (auto set : MovementSets)
+        {
+            if (set.name == name)
+            {
+                for (int i = 0; i < iterations; i++)
+                {
+                    for (auto &coord : set.series)
+                    {
+                        extensionCommand com(set.name, coord, set.millisecondDelay);
+                        addNewExtensionCommand(com);
+                    }
+                }
+            }
+        }
+    }
+    void checkAndSetNewCoordinate()
+    {
+        uint64_t now = time_us_64();
+
+        if (extensionCalls.size() == 0) {
+            return;
+        };
+            
+
+        uint64_t nextCall = extensionCalls[0].executionMoment;
+
+        if (now > nextCall)
+        {
+            currentPosition = extensionCalls[0].coordinate;
+            vector<float> newAngles;
+            getServoAnglesForPoint(extensionCalls[0].coordinate, &newAngles);
+            extensionCalls.erase(extensionCalls.begin());
+        };
+    }
     void addMovementSeries(MovementSeries newMove)
     {
         MovementSets.push_back(newMove);
@@ -81,32 +138,33 @@ public:
         float newXYcLength = calculateDistance(xy[0], xyNewCoordinate);
         float newyzEndYPlaneLength = calculateDistance(yz[1], newYZcoordinate);
         float linearTranslationLength = newXYcLength > newyzEndYPlaneLength ? newXYcLength : newyzEndYPlaneLength;
-        floatContainer[mServos[1].servoIndex] = findLinearTranslation(&xyTriangle, linearTranslationLength, &standardZero);
-        floatContainer[mServos[1].servoIndex] = mServos[1].convert(standardZero[1], xyNewCoordinate[1], floatContainer[mServos[1].servoIndex]);
+        floatContainer[1] = findLinearTranslation(&xyTriangle, linearTranslationLength, &standardZero);
+        floatContainer[1] = mServos[1].convert(standardZero[1], xyNewCoordinate[1], floatContainer[1]);
         // ensure that relevant points need rotation before starting process;
         float currentAndDestinationXcoordinateDifference = standardZero[0] - xyNewCoordinate[0];
         if (currentAndDestinationXcoordinateDifference != 0)
         {
-            floatContainer[mServos[0].servoIndex] = findRotationTranslation(mServos[0].servoPosition, xyNewCoordinate, standardZero);
-            floatContainer[mServos[0].servoIndex] = mServos[0].convert(standardZero[0], xyNewCoordinate[0], floatContainer[mServos[0].servoIndex]);
+            floatContainer[0] = findRotationTranslation(mServos[0].servoPosition, xyNewCoordinate, standardZero);
+            floatContainer[0] = mServos[0].convert(standardZero[0], xyNewCoordinate[0], floatContainer[0]);
         }
         else
         {
-            floatContainer[mServos[0].servoIndex] = mServos[0].defaultAngle;
+            floatContainer[0] = mServos[0].defaultAngle;
         }
         float curAndDestDifferenceOnZ = newYZcoordinate[1] - standardZero[2];
         if (curAndDestDifferenceOnZ != 0)
         {
-            floatContainer[mServos[2].servoIndex] = findRotationTranslation({mServos[2].servoPosition[1], mServos[2].servoPosition[2]}, newYZcoordinate, {coordinate[1], coordinate[2]});
-            floatContainer[mServos[2].servoIndex] = mServos[2].convert(standardZero[2], newYZcoordinate[1], floatContainer[mServos[2].servoIndex]);
+            floatContainer[2] = findRotationTranslation({mServos[2].servoPosition[1], mServos[2].servoPosition[2]}, newYZcoordinate, {coordinate[1], coordinate[2]});
+            floatContainer[2] = mServos[2].convert(standardZero[2], newYZcoordinate[1], floatContainer[2]);
         }
         else
         {
-            floatContainer[mServos[2].servoIndex] = mServos[2].defaultAngle;
+            floatContainer[2] = mServos[2].defaultAngle;
         }
         for (int i = 0; i < 3; i++)
         {
             newServoAngles->push_back(floatContainer[i]);
+            mServos[i].currentAngle = floatContainer[i];
         };
 
         xyTriangle.setSideCLength(calculateDistance(xy[0], xy[2]));
