@@ -43,17 +43,23 @@ int main()
     controller.setNewExtensionTracker(rfLeg);
 
     MovementSeries test("test", "transition", 20, {{0.f, 20.f, 0.f}, {90.f, -20.f, -60.f}, {-60.f, -20.f, 60.f}}); //{0.f,20.f,0.f},
+    MovementSeries test2("test2", "transition", 20, {{0.f, 20.f, 0.f}, {90.f, -20.f,0.f}, {-60.f, -20.f, 0.f}}); //{0.f,20.f,0.f},
 
     test.increaseResolution(5);
+    test2.increaseResolution(5);
 
     controller.setNewMovementSeriesForExtension("rightFront", test);
+    controller.setNewMovementSeriesForExtension("rightFront", test2);
 
     multicore_launch_core1(secondaryLoop);
 
     while (true)
     {   
         gpio_put(LED, 1);
-        extensionSeriesCommand newCommand("rightFront", "test", 4);
+        extensionSeriesCommand newCommand("rightFront", "test", 2);
+        extensionSeriesCommand dupCom("rightFront", "test2", 2);
+        controller.prepareNextSeries(newCommand);
+        controller.prepareNextSeries(dupCom);
         controller.prepareNextSeries(newCommand);
         sleep_ms(1000 * 30);
         gpio_put(LED, 0);
