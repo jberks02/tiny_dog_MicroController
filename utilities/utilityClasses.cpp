@@ -112,26 +112,35 @@ private:
 public:
     float convert(float defaultRelevantNumber, float newRelNumber, float newAngle)
     {
+        float newAngleValue;
         if (conversionType == "default")
         {
-            return defaultConversion(defaultRelevantNumber, newRelNumber, newAngle);
+            newAngleValue = defaultConversion(defaultRelevantNumber, newRelNumber, newAngle);
         }
         else if (conversionType == "quadratic")
         {
-            return convertOnQuadraticScale(newAngle);
+            newAngleValue = convertOnQuadraticScale(newAngle);
         }
         else if (conversionType == "linear")
         {
-            return convertLinear(newAngle);
+            newAngleValue = convertLinear(newAngle);
         }
         else if (conversionType == "exponential")
         {
-            return convertExponential(newAngle);
+            newAngleValue = convertExponential(newAngle);
         }
         else
         {
-            return newAngle;
+            newAngleValue = newAngle;
         }
+        // if(inverted == true & newAngleValue > 90.f) {
+        //     return 180 - newAngleValue;
+        // } else if (inverted == true & newAngleValue < 90.f) {
+        //     return newAngleValue - 180;
+        // } else {
+        //     return newAngleValue;
+        // }
+        return inverted == true ? 180 - newAngleValue : newAngleValue;
     }
     void setQuadraticFactors(map<char, float> factors)
     {
