@@ -48,7 +48,6 @@ private:
     }
 };
 
-
 class PositioningServo
 {
 public:
@@ -153,14 +152,16 @@ public:
         linearFactors['m'] = factors['m'];
         linearFactors['b'] = factors['b'];
     }
-    void setExponentialFactors(map<char, float> factors) {
+    void setExponentialFactors(map<char, float> factors)
+    {
         exponentialFactors['a'] = factors['a'];
         exponentialFactors['b'] = factors['b'];
         exponentialFactors['c'] = factors['c'];
     }
 };
 
-struct extensionCommand {
+struct extensionCommand
+{
     string name;
     vector<float> coordinate;
     uint64_t postDelay;
@@ -173,17 +174,20 @@ struct extensionCommand {
     }
 };
 
-struct servoCommand {
+struct servoCommand
+{
     int servo;
     float angle;
     uint64_t postDelay;
 };
 
-struct extensionSeriesCommand {
+struct extensionSeriesCommand
+{
     string extensionName;
     string seriesName;
     int iterations;
-    extensionSeriesCommand(string name, string sname, int i) {
+    extensionSeriesCommand(string name, string sname, int i)
+    {
         extensionName = name;
         seriesName = sname;
         iterations = i;

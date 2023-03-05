@@ -21,6 +21,7 @@
 #include <cstring>
 #include <cmath>
 #include <map>
+#include <sstream>
 
 /*
  * PICO HEADERS
@@ -39,8 +40,10 @@
 #include "./utilities/utilityClasses.cpp"
 #include "./modules/TriangleTracker.cpp"
 #include "./modules/extensionTracker.cpp"
+#include "./modules/communicationTracker.cpp"
 #include "./controllers/PCA9685.cpp"
 #include "./controllers/extensionController.cpp"
+#include "./controllers/spiInterface.cpp"
 
 #ifdef __cplusplus
 extern "C"

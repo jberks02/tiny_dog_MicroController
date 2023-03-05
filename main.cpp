@@ -42,8 +42,8 @@ int main()
 
     controller.setNewExtensionTracker(rfLeg);
 
-    MovementSeries test("test", "transition", 20, {{0.f, 20.f, 0.f}, {90.f, -20.f, -60.f}, {-60.f, -20.f, 60.f}}); //{0.f,20.f,0.f},
-    MovementSeries test2("test2", "transition", 20, {{0.f, 20.f, 0.f}, {90.f, -20.f,0.f}, {-60.f, -20.f, 0.f}}); //{0.f,20.f,0.f},
+    MovementSeries test("test", "transition", 20, {{0.f, 30.f, 0.f}, {90.f, -20.f, -60.f}, {-60.f, -20.f, 60.f}}); //{0.f,20.f,0.f},
+    MovementSeries test2("test2", "transition", 20, {{0.f, 30.f, 0.f}, {90.f, -20.f,0.f}, {-60.f, -20.f, 0.f}}); //{0.f,20.f,0.f},
 
     test.increaseResolution(5);
     test2.increaseResolution(5);
