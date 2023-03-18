@@ -1,15 +1,6 @@
 #include "../main.h"
 using namespace std;
 
-// const char *json = "{\"a\":1}";
-// picojson::value v;
-// std::string err;
-// const char *json_end = picojson::parse(v, json, json + strlen(json), &err);
-// if (!err.empty())
-// {
-//     std::cerr << err << std::endl;
-// }
-
 class Communications
 {
 public:
@@ -28,7 +19,6 @@ public:
     {
         try
         {
-            pause_updates = true;
             updates_occurring = true;
 
             picojson::value parsedCommand;
@@ -42,10 +32,6 @@ public:
                 throw "Sent value is not a proper value";
 
             string command = parsedCommand.get("command").get<string>();
-
-            // picojson::object ObjectToCreate = parsedCommand;
-
-            // to_lower(objectToCreate);
 
             if (command == "EXTENSIONTRACKER")
             {
@@ -73,7 +59,6 @@ public:
                 return 0;
             }
             
-            pause_updates = false;
             updates_occurring = false;
         }
         catch (...)

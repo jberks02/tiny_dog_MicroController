@@ -68,40 +68,50 @@ public:
         };
     }
 
-// public:
-//     void construct_new_write()
-//     {
-//         try
-//         {
+    public:
+        void construct_new_write()
+        {
+            try
+            {
 
-//             peripherals->pause_updates = true;
+                peripherals->pause_updates = true;
 
-//             while (peripherals->updates_occurring == true)
-//             {
-//                 tight_loop_contents();
-//             }
+                while (peripherals->updates_occurring == true)
+                {
+                    tight_loop_contents();
+                }
 
-//             string newMessage = peripherals->generate_new_response();
+                string newMessage = "{ \"positioningMotors\": [";
 
-//             peripherals->pause_updates = false;
+                for(int i = 0; i < peripherals->servos.size(); i++) {
+                    string jsonOfMotor;
+                    peripherals->servos[i].getJsonStringOfClass(&jsonOfMotor);
+                    newMessage.append(jsonOfMotor);
+                    if(i < peripherals->servos.size() - 1) {
+                        newMessage.append(",");
+                    }
+                }
+                newMessage.append("]}");
 
-//             char newCommand[newMessage.length()];
+                peripherals->pause_updates = false;
 
-//             strcpy(newCommand, newMessage.c_str());
+                char newCommand[newMessage.length()];
 
-//             memset(write_buffer, 0, newMessage.length());
+                strcpy(newCommand, newMessage.c_str());
 
-//             for (int i = 0; i < newMessage.length(); i++)
-//             {
-//                 write_buffer[i] = newCommand[i];
-//             }
-//         }
-//         catch (...)
-//         {
-//             printf("could not construct new write");
-//             return;
-//         }
-//     }
+                memset(write_buffer, 0, newMessage.length());
+
+                for (int i = 0; i < newMessage.length(); i++)
+                {
+                    write_buffer[i] = newCommand[i];
+                }
+            }
+            catch (...)
+            {
+                printf("could not construct new write");
+                return;
+            }
+        }
 
 public:
     int exchangeByteMessage()
@@ -115,7 +125,7 @@ public:
             if (writeable == false || readable == false)
                 return 0;
 
-            // construct_new_write();
+            construct_new_write();
 
             uint16_t check_read[1];
             uint16_t check_write[1] = {sizeof(write_buffer)};
@@ -140,25 +150,11 @@ public:
 
             int bytesExchanged = spi_write16_read16_blocking(spi0, write_buffer, read_buffer, exchangeLength);
 
-            clear_write_buffer();
-
-            int previous_min = 0;
-
             for (int i = 0; i < 256; i++)
             {
-                if (read_buffer[i] == ';')
-                {
-                    string command;
-                    int command_index = 0;
-                    for (int c = previous_min; c <= i; c++)
-                    {
-                        command.push_back(read_buffer[c]);
-                        command_index++;
-                        previous_min = c;
-                    }
-                    previous_min++;
-                    peripherals->process_command(command, command.size());
-                }
+                string command;
+                command.push_back(read_buffer[i]);
+                peripherals->process_command(command, command.size());
             }
 
             clear_read_buffer();
