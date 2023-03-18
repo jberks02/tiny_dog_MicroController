@@ -58,10 +58,11 @@ int main()
 
     SpiInterface communication(&translationLayer);
 
+    communication.setToSlave();
+
     while (true)
     {
         gpio_put(LED, 1);
-        communication.setToSlave();
         communication.exchangeByteMessage();
         gpio_put(LED, 0);
         if (translationLayer.ExtensionTrackerList.size() > 0)
@@ -77,7 +78,6 @@ int main()
             translationLayer.ExtensionTrackerList.erase(translationLayer.ExtensionTrackerList.begin());
             controller.setNewExtensionTracker(zeroIndexTracker);
         }
-        gpio_put(LED, 1);
         if(translationLayer.seriesCommands.size() > 0) {
             for(auto &com : translationLayer.seriesCommands) {
                 controller.prepareNextSeries(com);
@@ -91,8 +91,11 @@ int main()
                 }
             }
         }
-        gpio_put(LED, 0);
-        // if()
+        if(translationLayer.commands.size() > 0) {
+            for(auto &com : translationLayer.commands) {
+                controller.setExtensionToPoint(com);
+            }
+        }
         // extensionSeriesCommand newCommand("rightFront", "test", 2);
         // extensionSeriesCommand dupCom("rightFront", "test2", 2);
         // controller.prepareNextSeries(newCommand);

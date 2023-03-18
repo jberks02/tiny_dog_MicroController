@@ -117,8 +117,7 @@ public:
         if (now > nextCall)
         {
             currentPosition = extensionCalls[0].coordinate;
-            vector<float> newAngles;
-            getServoAnglesForPoint(extensionCalls[0].coordinate, &newAngles);
+            getServoAnglesForPoint(extensionCalls[0].coordinate);
             extensionCalls.erase(extensionCalls.begin());
         };
     }
@@ -126,10 +125,9 @@ public:
     {
         MovementSets.push_back(newMove);
     }
-    void getServoAnglesForPoint(vector<float> newEndEffectorPoint, vector<float> *newServoAngles)
+    void getServoAnglesForPoint(vector<float> newEndEffectorPoint)
     {
         // set up vars that will be needed throughout
-        newServoAngles->clear();
         float floatContainer[3] = {0.f, 0.f, 0.f};
         vector<float> xyNewCoordinate = {newEndEffectorPoint[0], newEndEffectorPoint[1]};
         vector<float> newYZcoordinate = {newEndEffectorPoint[1], newEndEffectorPoint[2]};
@@ -163,7 +161,6 @@ public:
         }
         for (int i = 0; i < 3; i++)
         {
-            newServoAngles->push_back(floatContainer[i]);
             mServos[i].currentAngle = floatContainer[i];
         };
 

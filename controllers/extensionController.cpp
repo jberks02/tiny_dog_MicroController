@@ -41,7 +41,16 @@ public:
             };
         }
     }
-    int runExtensions() {
+    void setExtensionToPoint(extensionCommand command)
+    {
+        for(auto &effector : endEffectors) {
+            if(effector.name == command.name) {
+                effector.getServoAnglesForPoint(command.coordinate);
+            }
+        }
+    }
+    int runExtensions()
+    {
         try {
             while (true)
             {
@@ -49,10 +58,6 @@ public:
                     extension.checkAndSetNewCoordinate();
                     for(auto &servo : extension.mServos) {
                         servoController->servoSetAngle(servo.currentAngle, servo.servoIndex);
-                    }
-                    float coord[3] = {extension.currentPosition[0], extension.currentPosition[1], extension.currentPosition[2]};
-                    for(int i = 0; i < 3; i++) {
-                        cout << coord[i] << endl;
                     }
                 }
             }
