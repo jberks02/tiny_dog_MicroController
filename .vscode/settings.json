@@ -4,11 +4,20 @@
     },
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "files.associations": {
+        "*.embeddedhtml": "html",
         "vector": "cpp",
         "initializer_list": "cpp",
         "*.tcc": "cpp",
         "deque": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "array": "cpp",
+        "memory": "cpp",
+        "istream": "cpp",
+        "ranges": "cpp",
+        "functional": "cpp",
+        "tuple": "cpp",
+        "utility": "cpp",
+        "variant": "cpp"
     },
     "C_Cpp.errorSquiggles": "enabled",
     "C_Cpp.default.intelliSenseMode": "gcc-arm",

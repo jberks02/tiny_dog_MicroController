@@ -148,7 +148,7 @@ public:
             {
                 if (read_buffer[i] == ';')
                 {
-                    vector<uint8_t> command;
+                    string command;
                     int command_index = 0;
                     for (int c = previous_min; c <= i; c++)
                     {

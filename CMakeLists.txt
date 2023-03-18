@@ -1,11 +1,22 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.25)
 
 include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
 include(pico_sdk_import.cmake)
 
+# target_include_directories(json PRIVATE $ENV{C_LIBRARIESROOT}/picojson)
+
+# set(SOURCES $ENV{C_LIBRARIESROOT}/picojson/picojson.h)
+# include($ENV{C_LIBRARIESROOT}/picojson/picojson.h)
+
+# set(JSON_Install OFF CACHE INTERNAL "")
+
+# add_subdirectory(nlohmann_json)
+
+# target_link_libraries(example PRIVATE nlohmann_json::nlohmann_json)
+
 project(TinyDogMicroController VERSION 1.0.0)
-set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD 17)
 set(CMAKE_CXX_STANDARD 17)
 set(PICO_ENABLE_CXX_EXCEPTIONS 1)
 

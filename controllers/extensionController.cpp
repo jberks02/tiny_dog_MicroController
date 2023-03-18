@@ -3,7 +3,7 @@ using namespace std;
 
 class ExtensionController
 {
-private:
+public:
     vector<ExtensionTracker> endEffectors;
     vector<extensionSeriesCommand> extensionSeriesCall;
     PCA9685 *servoController = NULL;

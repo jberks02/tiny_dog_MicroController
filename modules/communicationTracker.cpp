@@ -1,69 +1,80 @@
 #include "../main.h"
-using namespace std; 
+using namespace std;
+
+// const char *json = "{\"a\":1}";
+// picojson::value v;
+// std::string err;
+// const char *json_end = picojson::parse(v, json, json + strlen(json), &err);
+// if (!err.empty())
+// {
+//     std::cerr << err << std::endl;
+// }
 
 class Communications
 {
 public:
     bool pause_updates = false;
-
-public:
     bool updates_occurring = false;
-
-public:
     vector<vector<vector<float>>> xyPlaneList;
-
-public:
     vector<vector<vector<float>>> yzPlaneList;
-
-public:
     string name;
-
-public:
     vector<float> defaultCoordinate;
-
-public:
     vector<PositioningServo> servos;
-
-public:
-    int process_command(vector<uint8_t> command, int commandLength)
+    vector<MovementSeries> movementSeriesList;
+    vector<extensionCommand> commands;
+    vector<ExtensionTrackerArgs> ExtensionTrackerList;
+    vector <extensionSeriesCommand> seriesCommands;
+    int process_command(string command, int commandLength)
     {
         try
         {
+            pause_updates = true;
+            updates_occurring = true;
 
-            int lastIndex = 0;
+            picojson::value parsedCommand;
 
-            while (command[0] == '\001')
-            {
-                shift_left(&command);
-            }
+            string parsingError = picojson::parse(parsedCommand, command);
 
-            string objectToCreate = extractStringPartial(command, &lastIndex, ' ');
+            if (!parsingError.empty())
+                throw parsingError;
+
+            if (!parsedCommand.is<picojson::object>())
+                throw "Sent value is not a proper value";
+
+            string command = parsedCommand.get("command").get<string>();
+
+            // picojson::object ObjectToCreate = parsedCommand;
 
             // to_lower(objectToCreate);
 
-            if (objectToCreate == "EXTENSIONTRACKER")
+            if (command == "EXTENSIONTRACKER")
             {
-                // function to process extensionTracker
+                setupExtensionTracker(parsedCommand);
                 return 0;
             }
-            else if (objectToCreate == "MOVEMENTSERIES")
+            else if (command == "MOVEMENTSERIES")
             {
-                // function to add new series
+                newMovementSeries(parsedCommand);
                 return 0;
             }
-            else if (objectToCreate == "EXTENSIONSERIESCOMMAND")
+            else if (command == "EXTENSIONSERIESCOMMAND")
             {
-                // function to run new series for number of iterations.
+                processExtensionSeriesCall(parsedCommand);
                 return 0;
             }
-            else if (objectToCreate == "POSITIONINGMOTOR")
+            else if (command == "POSITIONINGMOTOR")
             {
-                processNewMotor(lastIndex, command);
+                processNewMotor(parsedCommand);
                 return 0;
-            } 
-            else if (objectToCreate == "XYPLANE") {
-                processXyPlane(lastIndex, command);
             }
+            else if (command == "EXTENSIONCOMMAND")
+            {
+                processPositionCommand(parsedCommand);
+                return 0;
+            }
+            
+            pause_updates = false;
+            updates_occurring = false;
         }
         catch (...)
         {
@@ -71,98 +82,63 @@ public:
         }
         return 1;
     }
-private:
 
-    // function to create new server
-    // args for servo: int servoIndex, char movementType, float defaultAngle,
-    // vector<float> servoPosition, string conversionType = "default", bool inverted = false,
-    // string motorType = "servo"
-    void processXyPlane(lastIndex, command) {
+private:
+    void setupExtensionTracker(picojson::value json)
+    {
+
+        ExtensionTrackerArgs argStruct(json);
+
+        for (auto &servoIndex : argStruct.servos)
+        {
+            if (servos.size() < servoIndex)
+                throw "Positioning Servo is missing from list" + to_string(servoIndex);
+        }
+
+        ExtensionTrackerList.push_back(argStruct);
+    }
+    void processNewMotor(picojson::value json)
+    {
+
+        PositioningServoArgs argStruct(json);
+
+        PositioningServo newMotor(
+            argStruct.servoIndex, argStruct.movementType, argStruct.defaultAngle,
+            argStruct.servoPosition, argStruct.conversionType,
+            argStruct.inverted, argStruct.motorType);
+
+        servos.push_back(newMotor);
+    }
+    void newMovementSeries(picojson::value json)
+    {
+
+        MovementSeriesArgs argStruct(json);
+
+        MovementSeries newSet(argStruct.name, argStruct.type, argStruct.millisecondDelay, argStruct.series);
+
+        int resolutionMultiplication = json.get("resolution").get<double>();
+
+        newSet.increaseResolution(resolutionMultiplication);
+
+        movementSeriesList.push_back(newSet);
+    }
+    void processPositionCommand(picojson::value json)
+    {
+
+        ExtensionCommandArgs argStruct(json);
+
+        extensionCommand command(argStruct.name, argStruct.coordinate, argStruct.postDelay);
+
+        commands.push_back(command);
+        
+    }
+    void processExtensionSeriesCall(picojson::value json) {
+
+        SeriesCommandArgs argStruct(json);
+
+        extensionSeriesCommand seriesCommand(argStruct.name, argStruct.seriesName, argStruct.iterations);
+
+        seriesCommands.push_back(seriesCommand);
 
     } 
-    void processNewMotor(int lastIndex, vector<uint8_t> set)
-    {
-        if (set[lastIndex] == ' ')
-            lastIndex++;
-        string servoIndex = extractStringPartial(set, &lastIndex, (char)' ');
-        string moveType = extractStringPartial(set, &lastIndex, ' ');
-        string defaultAngle = extractStringPartial(set, &lastIndex, ' ');
-        if(set[lastIndex] != '{') throw set;//bad input
-        lastIndex++;
-        vector<string> servoPosition = {extractStringPartial(set, &lastIndex, ','), extractStringPartial(set, &lastIndex, ','), extractStringPartial(set, &lastIndex, '}')};
-        string conversionType = extractStringPartial(set, &lastIndex, ' ');
-        string inverted = extractStringPartial(set, &lastIndex, ' ');
-        string motorType = extractStringPartial(set, &lastIndex, ' ');
-        servos.push_back(
-            PositioningServo(atoi(servoIndex.c_str()), moveType[0], stof(defaultAngle.c_str()),
-                             {stof(servoPosition[0].c_str()), stof(servoPosition[1].c_str()), stof(servoPosition[2].c_str())},
-                             conversionType, atoi(inverted.c_str()), motorType));
-    }
-    string extractStringPartial(vector<uint8_t> set, int *lastIndex, char breakAt)
-    {
-        string segment;
-        for (int i = *lastIndex; i < set.size(); i++)
-        {
-            if (set[i] == breakAt)
-                break;
-            segment.push_back(set[i]);
-            lastIndex++;
-        }
-        lastIndex++;
-        return segment;
-    }
-    // float extractNumberInCommand(vector<uint8_t> set, int *lastIndex, char breakAt) {
-    //     string segment;
-    //     for(int i = *lastIndex; i < set.size(); i++) {
-    //         if(set[i] == breakAt) break;
-    //         segment.push_back(set[i]);
-    //         lastIndex++;
-    //     }
-    //     lastIndex++;
-    //     return stof(segment.c_str());
-    // }
-    //  void processExtensionTracker(int lastIndex, uint8_t *set, int setLength)
-    //  {
-    //      //getName of extension
-    //      string extensionName;
-    //      addToStringTillCommaBreak(&extensionName, set, &lastIndex);
-    //      name = extensionName;
-    //      lastIndex++;
-    //      //get planes of extension
-    //      string protoXyPlane;
-    //      int forwardBraces;
-    //      int backBraces;
-    //      int l = lastIndex;
-    //      for(int charIndex = l; charIndex < setLength; charIndex++) {
-    //          if(set[charIndex] == ',') break;
-    //          if(set[charIndex] == '{') forwardBraces++;
-    //          if(set[charIndex] == '}') backBraces++;
-    //          protoXyPlane.push_back(set[charIndex]);
-    //          lastIndex = charIndex;
-    //      }
-    //      lastIndex++;
-    //      if(forwardBraces != backBraces) return;//alert user that data is missing
-    //      vector<vector<float>> xy;
-    //  }
-    int set_command_index(int *lastIndex, uint8_t *set, int setLength, int startIndex)
-    {
-
-        string indexString = "";
-
-        for (int i = startIndex; i < setLength; i++)
-        {
-            *lastIndex = i;
-            if (set[i] == ' ' && indexString == "")
-                continue;
-            if (set[i] == ' ' && indexString != "")
-                break;
-            indexString = indexString + (char)set[i];
-        }
-
-        return atoi(indexString.c_str());
-    }
-    void shift_left(vector<uint8_t> *list)
-    {
-        list->erase(list->begin());
-    }
 };
