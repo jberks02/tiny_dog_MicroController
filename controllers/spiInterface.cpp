@@ -81,17 +81,7 @@ public:
                     tight_loop_contents();
                 }
 
-                string newMessage = "{ \"positioningMotors\": [";
-
-                for(int i = 0; i < peripherals->servos.size(); i++) {
-                    string jsonOfMotor;
-                    peripherals->servos[i].getJsonStringOfClass(&jsonOfMotor);
-                    newMessage.append(jsonOfMotor);
-                    if(i < peripherals->servos.size() - 1) {
-                        newMessage.append(",");
-                    }
-                }
-                newMessage.append("]}");
+                string newMessage = peripherals->loadedWrite;
 
                 peripherals->pause_updates = false;
 

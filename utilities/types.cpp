@@ -11,7 +11,6 @@ struct ExtensionTrackerArgs {
         vector<float> servos;
     ExtensionTrackerArgs(picojson::value jsonArg) {
         name = jsonArg.get("name").get<string>();
-        
         picojson::value defaultCoordinateList = jsonArg.get("defaultCoordinate");
         picojson::value servoIntList = jsonArg.get("servos");
         picojson::value xyPlaneJson = jsonArg.get("xyPlane");
