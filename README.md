@@ -36,7 +36,7 @@ The first body that will need to be added is the motors, which you will use to d
 
 ```json
 {
-    "command": "POSITIONINGMOTOR",
+    "command": "POSITIONINGMOTOR",//literal
     "conversionType": "default",//  | quadratic | linear | exponential - this is the type of mathematical conversion used to turn triangle angles into motor angles. The values underlying this are not currently updatable.
     "motorType": "servo",// | brushedMotor | brushlessMotor | stepper
     "movementType": "r",// or l - This determines how the servos new angle for a position will be calculated. A linear("l") one will use arc sign to calculate the angles for a new triangle side length, while a rotational("r") indicates fixed length and will result in a rotational attempt to align points. 
@@ -54,7 +54,7 @@ The extension trackers will require a number of arguments around the triangles t
 
 ```json 
 {
-    "command": "EXTENSIONTRACKER",
+    "command": "EXTENSIONTRACKER",//literal
     "name": "rightFrontLeg",
     "defaultCoordinate": [0.0, 0.0, 0.0],
     "servos": [0, 1, 2],
@@ -69,6 +69,7 @@ A movement series is a list of points that the Extension it's called for can mov
 
 ```json
 {
+    "command": "MOVEMENTSERIES",//literal
     "name": "forwardWalk",
     "type": "some kind of helper marker text",
     "millisecondDelay": 20,//milliseconds between each point aquisition
@@ -106,4 +107,38 @@ void increaseResolution(int resolutionMultiplication)
         }
     };
 ```
+# Movement Commands
 
+Now that we have everything set up we can start sending commands into the system over the spi interface to actually move our extensions.
+
+### Run a series on an extension for a certain number of iterations
+
+```json
+{
+    "command": "MOVEMENTSERIES",
+    "name": "extensionName",
+    "seriesName": "seriesName",
+    "iterations": 2
+}
+```
+
+### Send Extension to point
+
+```json
+{
+    "command": "EXTENSIONCOMMAND",
+    "name": "extensionName",
+    "postDelay": 10,
+    "coordinate": [20.0, 50.5, 10.2]
+}
+```
+
+# Read Commands
+
+Read requests come through the same "command" field that differentiates the other requests.
+
+```json
+{
+    "command": "READMOTORS"
+}
+```

@@ -14,7 +14,7 @@ public:
     vector<MovementSeries> movementSeriesList;
     vector<extensionCommand> commands;
     vector<ExtensionTrackerArgs> ExtensionTrackerList;
-    vector <extensionSeriesCommand> seriesCommands;
+    vector<extensionSeriesCommand> seriesCommands;
     int process_command(string command, int commandLength)
     {
         try
@@ -53,12 +53,16 @@ public:
             else if (command == "EXTENSIONCOMMAND")
             {
                 processPositionCommand(parsedCommand);
-            } else if (command == "READMOTORS") {
+            }
+            else if (command == "READMOTORS")
+            {
                 createMotorOutputToRead();
-            } else {
+            }
+            else
+            {
                 passcode = 1;
             }
-            
+
             updates_occurring = false;
             return passcode;
         }
@@ -68,6 +72,7 @@ public:
         }
         return 1;
     }
+
 private:
     void setupExtensionTracker(picojson::value json)
     {
@@ -109,16 +114,15 @@ private:
         extensionCommand command(argStruct.name, argStruct.coordinate, argStruct.postDelay);
 
         commands.push_back(command);
-        
     }
-    void processExtensionSeriesCall(picojson::value json) {
+    void processExtensionSeriesCall(picojson::value json)
+    {
 
         SeriesCommandArgs argStruct(json);
 
         extensionSeriesCommand seriesCommand(argStruct.name, argStruct.seriesName, argStruct.iterations);
 
         seriesCommands.push_back(seriesCommand);
-
     }
     void createMotorOutputToRead()
     {
