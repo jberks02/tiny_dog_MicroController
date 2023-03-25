@@ -163,3 +163,8 @@ VSYS_GPIO_39-->PICO
 GND_GPIO_38-->PICO
 ```
 ## PICO to Adafruit PCA9685 Carrier Board
+```mermaid
+graph TD;
+PICO-->SDA__GPIO_0
+PICO-->SCL_GPIO_1
+```
