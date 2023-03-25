@@ -11,23 +11,81 @@
 using namespace std;
 
 ExtensionController controller;
+const uint LED = PICO_DEFAULT_LED_PIN;
 
 void secondaryLoop()
 {
-    controller.runExtensions();
-}
-
-int main()
-{
-    stdio_init_all();
-
-    const uint LED = PICO_DEFAULT_LED_PIN;
-
     gpio_init(LED);
 
     gpio_set_dir(LED, GPIO_OUT);
 
     gpio_put(LED, 1);
+
+    Communications translationLayer;
+
+    SpiInterface communication(&translationLayer);
+
+    communication.setToSlave();
+
+    while (true)
+    {
+        gpio_put(LED, 1);
+        communication.exchangeByteMessage();
+        gpio_put(LED, 0);
+        if (translationLayer.ExtensionTrackerList.size() > 0)
+        {
+            ExtensionTrackerArgs zeroArg = translationLayer.ExtensionTrackerList[0];
+            ExtensionTracker zeroIndexTracker(zeroArg.name,
+                             zeroArg.yzPlane,
+                             zeroArg.xyPlane,
+                             zeroArg.defaultCoordinate,
+                             {translationLayer.servos[zeroArg.servos[0]],
+                              translationLayer.servos[zeroArg.servos[1]],
+                              translationLayer.servos[zeroArg.servos[2]]});
+            translationLayer.ExtensionTrackerList.erase(translationLayer.ExtensionTrackerList.begin());
+            controller.setNewExtensionTracker(zeroIndexTracker);
+        }
+        if (translationLayer.seriesCommands.size() > 0)
+        {
+            for (auto &com : translationLayer.seriesCommands)
+            {
+                controller.prepareNextSeries(com);
+            }
+            translationLayer.seriesCommands.clear();
+        }
+        if (translationLayer.movementSeriesList.size() > 0)
+        {
+            for (auto &ms : translationLayer.movementSeriesList)
+            {
+                for (auto &ext : controller.endEffectors)
+                {
+                    controller.setNewMovementSeriesForExtension(ext.name, ms);
+                }
+            }
+        }
+        if (translationLayer.commands.size() > 0)
+        {
+            for (auto &com : translationLayer.commands)
+            {
+                controller.setExtensionToPoint(com);
+            }
+        }
+        // extensionSeriesCommand newCommand("rightFront", "test", 2);
+        // extensionSeriesCommand dupCom("rightFront", "test2", 2);
+        // controller.prepareNextSeries(newCommand);
+        // controller.prepareNextSeries(dupCom);
+        // controller.prepareNextSeries(newCommand);
+        // sleep_ms(1000 * 10);
+        // extensionSeriesCommand nextCommand("rightFront", "test", 3);
+        // controller.prepareNextSeries(nextCommand);
+        // sleep_ms(1000 * 10);
+    }
+
+}
+
+int main()
+{
+    stdio_init_all();
 
     PCA9685 ServoController(0.f, 181.f, 64, 0, 1);
 
@@ -54,57 +112,9 @@ int main()
     multicore_reset_core1();
     multicore_launch_core1(secondaryLoop);
 
-    Communications translationLayer;
+    controller.runExtensions();
 
-    SpiInterface communication(&translationLayer);
-
-    communication.setToSlave();
-
-    while (true)
-    {
-        gpio_put(LED, 1);
-        communication.exchangeByteMessage();
-        gpio_put(LED, 0);
-        if (translationLayer.ExtensionTrackerList.size() > 0)
-        {
-            ExtensionTrackerArgs zeroArg = translationLayer.ExtensionTrackerList[0];
-            ExtensionTracker zeroIndexTracker(zeroArg.name,
-                             zeroArg.yzPlane,
-                             zeroArg.xyPlane,
-                             zeroArg.defaultCoordinate,
-                             {translationLayer.servos[zeroArg.servos[0]],
-                              translationLayer.servos[zeroArg.servos[1]],
-                              translationLayer.servos[zeroArg.servos[2]]});
-            translationLayer.ExtensionTrackerList.erase(translationLayer.ExtensionTrackerList.begin());
-            controller.setNewExtensionTracker(zeroIndexTracker);
-        }
-        if(translationLayer.seriesCommands.size() > 0) {
-            for(auto &com : translationLayer.seriesCommands) {
-                controller.prepareNextSeries(com);
-            }
-            translationLayer.seriesCommands.clear();
-        }
-        if(translationLayer.movementSeriesList.size() > 0) {
-            for (auto &ms : translationLayer.movementSeriesList) {
-                for(auto &ext : controller.endEffectors) {
-                    controller.setNewMovementSeriesForExtension(ext.name, ms);
-                }
-            }
-        }
-        if(translationLayer.commands.size() > 0) {
-            for(auto &com : translationLayer.commands) {
-                controller.setExtensionToPoint(com);
-            }
-        }
-        // extensionSeriesCommand newCommand("rightFront", "test", 2);
-        // extensionSeriesCommand dupCom("rightFront", "test2", 2);
-        // controller.prepareNextSeries(newCommand);
-        // controller.prepareNextSeries(dupCom);
-        // controller.prepareNextSeries(newCommand);
-        // sleep_ms(1000 * 10);
-        // extensionSeriesCommand nextCommand("rightFront", "test", 3);
-        // controller.prepareNextSeries(nextCommand);
-        // sleep_ms(1000 * 10);
-    }
+    return 0;
+    
 };
 

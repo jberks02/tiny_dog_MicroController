@@ -6,10 +6,7 @@ class Communications
 public:
     bool pause_updates = false;
     bool updates_occurring = false;
-    vector<vector<vector<float>>> xyPlaneList;
-    vector<vector<vector<float>>> yzPlaneList;
     string loadedWrite;
-    vector<float> defaultCoordinate;
     vector<PositioningServo> servos;
     vector<MovementSeries> movementSeriesList;
     vector<extensionCommand> commands;
