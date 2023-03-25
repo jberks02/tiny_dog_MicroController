@@ -142,3 +142,24 @@ Read requests come through the same "command" field that differentiates the othe
     "command": "READMOTORS"
 }
 ```
+
+# Wiring
+## Communication Between PI and PICO
+```mermaid
+graph TD;
+Raspberry-PI-->MOSI_GPIO_10-->RX_GPIO_16
+Raspberry-PI-->MISO_GPIO_9-->TX_GPIO_19
+Raspberry-PI-->SCLK_GPIO_11-->SCK_GPIO_18
+Raspberry-PI-->CE0_GPIO_8-->CSn_GPIO_17
+Raspberry-PI-->5V-->5V_CIRCUIT
+Raspberry-PI-->3V-->VSYS_GPIO_39
+Raspberry-PI-->GND-->GND_GPIO_38
+
+TX_GPIO_19-->PICO
+SCK_GPIO_18-->PICO
+CSn_GPIO_17-->PICO
+RX_GPIO_16-->PICO
+VSYS_GPIO_39-->PICO
+GND_GPIO_38-->PICO
+```
+## PICO to Adafruit PCA9685 Carrier Board
