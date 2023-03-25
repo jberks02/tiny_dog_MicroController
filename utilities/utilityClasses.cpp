@@ -48,7 +48,6 @@ private:
     }
 };
 
-
 class PositioningServo
 {
 public:
@@ -153,14 +152,40 @@ public:
         linearFactors['m'] = factors['m'];
         linearFactors['b'] = factors['b'];
     }
-    void setExponentialFactors(map<char, float> factors) {
+    void setExponentialFactors(map<char, float> factors)
+    {
         exponentialFactors['a'] = factors['a'];
         exponentialFactors['b'] = factors['b'];
         exponentialFactors['c'] = factors['c'];
     }
+    void getJsonStringOfClass(string *jsonString) {
+        // vector<float> servoPosition;
+        // map<char, float> quadraticEquationFactors{{'a', -0.02036}, {'b', 6.7478}, {'c', -214.8957}};
+        // map<char, float> linearFactors{{'m', 4.f}, {'b', 0}};
+        // map<char, float> exponentialFactors{{'a', 1.1}, {'b', -1}, {'c', -42}};
+        string moveT(1, movementType);
+        string inv = inverted == true ? "true" : "false";
+        jsonString->append("{");
+        jsonString->append("\"servoIndex\":" + to_string(servoIndex) + ",");
+        jsonString->append("\"movementType\":\"" + moveT + "\",");
+        jsonString->append("\"motorType\":\"" + motorType + "\",");
+        jsonString->append("\"defaultAngle\":" + to_string(defaultAngle) + ",");
+        jsonString->append("\"currentAngle\":" + to_string(currentAngle) + ',');
+        jsonString->append("\"inverted\":" + inv + ',');
+        jsonString->append("\"conversionType\":" + conversionType + ",");
+        jsonString->append("\"servoPosition\":[");
+        for(int i = 0; i < 3; i++) {
+            jsonString->append(to_string(servoPosition[i]));
+            if(i < 2)
+                jsonString->append(",");
+        }
+        jsonString->append("]");
+        jsonString->append("}");
+    }
 };
 
-struct extensionCommand {
+struct extensionCommand
+{
     string name;
     vector<float> coordinate;
     uint64_t postDelay;
@@ -173,17 +198,20 @@ struct extensionCommand {
     }
 };
 
-struct servoCommand {
+struct servoCommand
+{
     int servo;
     float angle;
     uint64_t postDelay;
 };
 
-struct extensionSeriesCommand {
+struct extensionSeriesCommand
+{
     string extensionName;
     string seriesName;
     int iterations;
-    extensionSeriesCommand(string name, string sname, int i) {
+    extensionSeriesCommand(string name, string sname, int i)
+    {
         extensionName = name;
         seriesName = sname;
         iterations = i;

@@ -21,7 +21,8 @@
 #include <cstring>
 #include <cmath>
 #include <map>
-
+#include <sstream>
+#include "./picojson.h"
 /*
  * PICO HEADERS
  */
@@ -36,11 +37,14 @@
 
 //My HEADERS
 #include "./utilities/utilityFunctions.cpp"
+#include "./utilities/types.cpp"
 #include "./utilities/utilityClasses.cpp"
 #include "./modules/TriangleTracker.cpp"
 #include "./modules/extensionTracker.cpp"
+#include "./modules/communicationTracker.cpp"
 #include "./controllers/PCA9685.cpp"
 #include "./controllers/extensionController.cpp"
+#include "./controllers/spiInterface.cpp"
 
 #ifdef __cplusplus
 extern "C"
