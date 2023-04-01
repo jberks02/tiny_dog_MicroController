@@ -21,9 +21,9 @@ void secondaryLoop()
 
     gpio_put(LED, 1);
 
-    Communications translationLayer;
+    // Communications translationLayer;
 
-    SpiInterface communication(&translationLayer);
+    SpiInterface communication;
 
     communication.setToSlave();
 
@@ -32,30 +32,32 @@ void secondaryLoop()
         gpio_put(LED, 1);
         communication.exchangeByteMessage();
         gpio_put(LED, 0);
-        if (translationLayer.ExtensionTrackerList.size() > 0)
+        if (ExtensionTrackerList.size() > 0)
         {
-            ExtensionTrackerArgs zeroArg = translationLayer.ExtensionTrackerList[0];
-            ExtensionTracker zeroIndexTracker(zeroArg.name,
-                             zeroArg.yzPlane,
-                             zeroArg.xyPlane,
-                             zeroArg.defaultCoordinate,
-                             {translationLayer.servos[zeroArg.servos[0]],
-                              translationLayer.servos[zeroArg.servos[1]],
-                              translationLayer.servos[zeroArg.servos[2]]});
-            translationLayer.ExtensionTrackerList.erase(translationLayer.ExtensionTrackerList.begin());
-            controller.setNewExtensionTracker(zeroIndexTracker);
+            for (auto &zeroArg : ExtensionTrackerList)
+            {
+                ExtensionTracker zeroIndexTracker(zeroArg.name,
+                                                  zeroArg.yzPlane,
+                                                  zeroArg.xyPlane,
+                                                  zeroArg.defaultCoordinate,
+                                                  {servos[zeroArg.servos[0]],
+                                                   servos[zeroArg.servos[1]],
+                                                   servos[zeroArg.servos[2]]});
+                ExtensionTrackerList.erase(ExtensionTrackerList.begin());
+                controller.setNewExtensionTracker(zeroIndexTracker);
+            }
         }
-        if (translationLayer.seriesCommands.size() > 0)
+        if (seriesCommands.size() > 0)
         {
-            for (auto &com : translationLayer.seriesCommands)
+            for (auto &com : seriesCommands)
             {
                 controller.prepareNextSeries(com);
             }
-            translationLayer.seriesCommands.clear();
+            seriesCommands.clear();
         }
-        if (translationLayer.movementSeriesList.size() > 0)
+        if (movementSeriesList.size() > 0)
         {
-            for (auto &ms : translationLayer.movementSeriesList)
+            for (auto &ms : movementSeriesList)
             {
                 for (auto &ext : controller.endEffectors)
                 {
@@ -63,24 +65,19 @@ void secondaryLoop()
                 }
             }
         }
-        if (translationLayer.commands.size() > 0)
+        if (commands.size() > 0)
         {
-            for (auto &com : translationLayer.commands)
+            for (auto &com : commands)
             {
                 controller.setExtensionToPoint(com);
             }
         }
-        // extensionSeriesCommand newCommand("rightFront", "test", 2);
-        // extensionSeriesCommand dupCom("rightFront", "test2", 2);
-        // controller.prepareNextSeries(newCommand);
-        // controller.prepareNextSeries(dupCom);
-        // controller.prepareNextSeries(newCommand);
-        // sleep_ms(1000 * 10);
-        // extensionSeriesCommand nextCommand("rightFront", "test", 3);
-        // controller.prepareNextSeries(nextCommand);
-        // sleep_ms(1000 * 10);
+        if (clear = true)
+        {
+            controller.clearAllItems();
+            clear = false;
+        }
     }
-
 }
 
 int main()
@@ -89,25 +86,25 @@ int main()
 
     PCA9685 ServoController(0.f, 181.f, 64, 0, 1);
 
-    controller.setServoController(&ServoController);
+    // controller.setServoController(&ServoController);
 
-    vector<vector<float>> yzPlane = {{86.61356, -33.f}, {86.61356, 0.f}, {0.f, 0.f}};
-    vector<vector<float>> xyPlane = {{0.f, 86.61356}, {-80.f, 86.61356}, {0, 0.f}};
-    vector<float> endaffectorCoordinate = {0.f, 0.f, 0.f};
-    vector<PositioningServo> servos = {PositioningServo(0, 'r', 90.f, {0.f, 86.61356, 0.f}), PositioningServo(1, 'l', 32.f, {-80.f, 86.61356, 0.f}, "quadratic"), PositioningServo(2, 'r', 90.f, {0.f, 86.61356, -33.f}, "default", true)}; // {0.f, 110.f, 0.f}, {0.f, 110.f, -33.f}
+    // vector<vector<float>> yzPlane = {{86.61356, -33.f}, {86.61356, 0.f}, {0.f, 0.f}};
+    // vector<vector<float>> xyPlane = {{0.f, 86.61356}, {-80.f, 86.61356}, {0, 0.f}};
+    // vector<float> endaffectorCoordinate = {0.f, 0.f, 0.f};
+    // vector<PositioningServo> servos = {PositioningServo(0, 'r', 90.f, {0.f, 86.61356, 0.f}), PositioningServo(1, 'l', 32.f, {-80.f, 86.61356, 0.f}, "quadratic"), PositioningServo(2, 'r', 90.f, {0.f, 86.61356, -33.f}, "default", true)}; // {0.f, 110.f, 0.f}, {0.f, 110.f, -33.f}
 
-    ExtensionTracker rfLeg("rightFront", yzPlane, xyPlane, endaffectorCoordinate, servos);
+    // ExtensionTracker rfLeg("rightFront", yzPlane, xyPlane, endaffectorCoordinate, servos);
 
-    controller.setNewExtensionTracker(rfLeg);
+    // controller.setNewExtensionTracker(rfLeg);
 
-    MovementSeries test("test", "transition", 20, {{0.f, 30.f, 0.f}, {90.f, -20.f, -60.f}, {-60.f, -20.f, 60.f}}); //{0.f,20.f,0.f},
-    MovementSeries test2("test2", "transition", 20, {{0.f, 30.f, 0.f}, {90.f, -20.f, 0.f}, {-60.f, -20.f, 0.f}});  //{0.f,20.f,0.f},
+    // MovementSeries test("test", "transition", 20, {{0.f, 30.f, 0.f}, {90.f, -20.f, -60.f}, {-60.f, -20.f, 60.f}}); //{0.f,20.f,0.f},
+    // MovementSeries test2("test2", "transition", 20, {{0.f, 30.f, 0.f}, {90.f, -20.f, 0.f}, {-60.f, -20.f, 0.f}});  //{0.f,20.f,0.f},
 
-    test.increaseResolution(5);
-    test2.increaseResolution(5);
+    // test.increaseResolution(5);
+    // test2.increaseResolution(5);
 
-    controller.setNewMovementSeriesForExtension("rightFront", test);
-    controller.setNewMovementSeriesForExtension("rightFront", test2);
+    // controller.setNewMovementSeriesForExtension("rightFront", test);
+    // controller.setNewMovementSeriesForExtension("rightFront", test2);
 
     multicore_reset_core1();
     multicore_launch_core1(secondaryLoop);
@@ -115,6 +112,4 @@ int main()
     controller.runExtensions();
 
     return 0;
-    
 };
-

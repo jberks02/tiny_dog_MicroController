@@ -12,16 +12,14 @@ public:
 
 private:
     int writeBufLength;
-
-private:
-    Communications *peripherals;
-
+    // Communications *peripherals;
+    // Communications *perf,
 public:
-    SpiInterface(Communications *perf, uint tx = 19, uint sck = 18, uint csn = 17, uint rx = 16, uint baudrate = 1000 * 100, uint CPOL = 0, uint CPHA = 0)
+    SpiInterface(uint tx = 19, uint sck = 18, uint csn = 17, uint rx = 16, uint baudrate = 1000 * 100, uint CPOL = 0, uint CPHA = 0)
     {
         try
         {
-            peripherals = perf;
+            // peripherals = perf;
             memset(write_buffer, 0, 32);
             memset(read_buffer, 0, 32);
             // initiatialize spi worker interface
@@ -74,16 +72,16 @@ public:
             try
             {
 
-                peripherals->pause_updates = true;
+                pause_updates = true;
 
-                while (peripherals->updates_occurring == true)
+                while (updates_occurring == true)
                 {
                     tight_loop_contents();
                 }
 
-                string newMessage = peripherals->loadedWrite;
+                string newMessage = loadedWrite;
 
-                peripherals->pause_updates = false;
+                pause_updates = false;
 
                 char newCommand[newMessage.length()];
 
@@ -144,7 +142,7 @@ public:
             {
                 string command;
                 command.push_back(read_buffer[i]);
-                peripherals->process_command(command, command.size());
+                process_command(command, command.size());
             }
 
             clear_read_buffer();
