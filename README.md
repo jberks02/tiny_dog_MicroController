@@ -94,7 +94,7 @@ this can be done simply with a single command.
 
 ### Resolution increase
 
-The resolution increase logic simply iterates over a series and calculates the halfway point between each point. this exponentially adds points to smooth out the motion. Notice that the resolution additions wrap around from the first to the last index. removing the need to 
+The resolution increase logic simply iterates over a series and calculates the halfway point between each point. this exponentially adds points to smooth out the motion. Notice that the resolution additions wrap around from the first to the last index. removing the need to connect your movements back to the beginning if they're cyclical.
 
 ```cpp
 void increaseResolution(int resolutionMultiplication)
