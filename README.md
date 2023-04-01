@@ -81,6 +81,16 @@ A movement series is a list of points that the Extension it's called for can mov
     "resolution": 4//number of iterations the that will be done in the resolution increase
 }
 ```
+### Remove all Structures
+
+At times it'll be necessary for development to remove all structures and start over from scratch
+this can be done simply with a single command.
+
+```json
+ {
+    "command": "DELETEALLSTRUCTURES"
+ }
+```
 
 ### Resolution increase
 

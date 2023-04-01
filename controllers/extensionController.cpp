@@ -7,8 +7,20 @@ public:
     vector<ExtensionTracker> endEffectors;
     vector<extensionSeriesCommand> extensionSeriesCall;
     PCA9685 *servoController = NULL;
+    bool clearing = false;
+    bool inUse = false;
 public:
-    void setServoController(PCA9685 *servoController) {
+    void clearAllItems() {
+        clearing = true;
+        while(inUse == true) {
+            tight_loop_contents();
+        }
+        endEffectors.clear();
+        extensionSeriesCall.clear();
+        clearing = false;
+    } 
+    void setServoController(PCA9685 *servoController)
+    {
         this->servoController = servoController;
     }
     int setNewExtensionTracker(ExtensionTracker extt)
@@ -53,13 +65,18 @@ public:
     {
         try {
             while (true)
-            {
+            {   
+                while(clearing == true) {
+                    tight_loop_contents();
+                }
+                inUse = true;
                 for(auto &extension : endEffectors) {
                     extension.checkAndSetNewCoordinate();
                     for(auto &servo : extension.mServos) {
                         servoController->servoSetAngle(servo.currentAngle, servo.servoIndex);
                     }
                 }
+                inUse = false;
             }
         } catch (...) {
             return 1;
