@@ -4,7 +4,7 @@ using translationFunc = function<void(picojson::value)>;
 
 bool pause_updates = false;
 bool updates_occurring = false;
-string loadedWrite;
+string loadedWrite = "pico";
 bool clear = false;
 vector<PositioningServo> servos;
 vector<MovementSeries> movementSeriesList;
@@ -65,7 +65,8 @@ void processExtensionSeriesCall(picojson::value json)
 
 void createMotorOutputToRead(picojson::value _parsedCom)
 {
-    string loadedWrite = "{ \"positioningMotors\": [";
+    loadedWrite.clear();
+    loadedWrite = "{ \"positioningMotors\": [";
 
     for (int i = 0; i < servos.size(); i++)
     {
@@ -96,7 +97,7 @@ map<string, translationFunc> commandMapping{
     {"READMOTORS", createMotorOutputToRead}
 };
 
-int process_command(string command, int commandLength)
+int process_command(string jsonString, int commandLength)
 {
     try
     {
@@ -106,7 +107,7 @@ int process_command(string command, int commandLength)
 
         picojson::value parsedCommand;
 
-        string parsingError = picojson::parse(parsedCommand, command);
+        string parsingError = picojson::parse(parsedCommand, jsonString);
 
         if (!parsingError.empty())
             throw parsingError;
@@ -116,41 +117,16 @@ int process_command(string command, int commandLength)
 
         string command = parsedCommand.get("command").get<string>();
 
-        // if (command == "EXTENSIONTRACKER")
-        // {
-        //     setupExtensionTracker(parsedCommand);
-        // }
-        // else if (command == "MOVEMENTSERIES")
-        // {
-        //     newMovementSeries(parsedCommand);
-        // }
-        // else if (command == "EXTENSIONSERIESCOMMAND")
-        // {
-        //     processExtensionSeriesCall(parsedCommand);
-        // }
-        // else if (command == "POSITIONINGMOTOR")//
-        // {
-        //     processNewMotor(parsedCommand);
-        // }
-        // else if (command == "EXTENSIONCOMMAND")
-        // {
-        //     processPositionCommand(parsedCommand);
-        // }
-        // else if (command == "READMOTORS")
-        // {
-        //     createMotorOutputToRead(parsedCommand);
-        // }
-        // else
-        // {
-        //     passcode = 1;
-        // }
+        commandMapping[command](parsedCommand);
 
         updates_occurring = false;
         return passcode;
     }
     catch (...)
     {
+        updates_occurring = false;
         return 1;
     }
+    updates_occurring = false;
     return 1;
 }

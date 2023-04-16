@@ -46,3 +46,16 @@ void parseCoordinateListFromJsonArray(picojson::value coordJsonList, vector<vect
         list->push_back(coordinate);
     }
 }
+
+void convertInt32ToUint8Array(uint8_t *list, int value) {
+    list[0] = (value >> 24) & 0xFF;
+    list[1] = (value >> 16) & 0xFF;
+    list[2] = (value >> 8) & 0xFF;
+    list[3] = (value >> 0) & 0xFF;
+};
+
+uint convertByteArrayToInt(uint8_t *list) {
+    uint value;
+    memcpy(&value, list, sizeof(int));
+    return value;
+}
