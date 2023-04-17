@@ -3,181 +3,223 @@ using namespace std;
 
 class SpiInterface
 {
+private:
+    string write = "";
 
-// private:
-//     uint8_t write_buffer[256];
-
-// public:
-//     uint8_t read_buffer[256];
-
-// private:
-//     int writeBufLength;
-    // Communications *peripherals;
-    // Communications *perf,
-private: string write;
 public:
-    SpiInterface(uint tx = 19, uint sck = 18, uint csn = 17, uint rx = 16, uint baudrate = 4000, uint CPOL = 0, uint CPHA = 0)
+    SpiInterface(uint tx = 19, uint sck = 18, uint csn = 17, uint rx = 16, uint baudrate = 1000*100, uint CPOL = 0, uint CPHA = 0)
     {
         try
         {
-            // peripherals = perf;
-            // memset(write_buffer, 0, 32);
-            // memset(read_buffer, 0, 32);
-            // initiatialize spi worker interface
             spi_init(spi0, baudrate);
             spi_set_slave(spi0, true);
-            spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
+            spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_LSB_FIRST);
             gpio_set_function(rx, GPIO_FUNC_SPI);
             gpio_set_function(sck, GPIO_FUNC_SPI);
             gpio_set_function(tx, GPIO_FUNC_SPI);
             gpio_set_function(csn, GPIO_FUNC_SPI);
             // Make the SPI pins available to picotool
             bi_decl(bi_4pins_with_func(rx, tx, sck, csn, GPIO_FUNC_SPI));
-
-            // clear_read_buffer();
-            // clear_write_buffer();
         }
         catch (...)
         {
             printf("Failure to initialize spi bus");
         }
     }
-
-public:
     void setToSlave()
     {
         spi_set_slave(spi0, true);
     }
+    void spiDynamicExchange()
+    {
 
-// public:
-    // void clear_write_buffer()
-    // {
-    //     for (int i = 0; i < sizeof(write_buffer); i++)
-    //     {
-    //         write_buffer[i] = 0;
-    //     };
-    // }
+        string read;
 
-// public:
-//     void clear_read_buffer()
-//     {
-//         for (int i = 0; i < sizeof(read_buffer); i++)
-//         {
-//             read_buffer[i] = 0;
-//         };
-//     }
+        // if(charIndex >= static_cast<int>(write.size())) {
+        //     charIndex = 0;
+        //     construct_new_write();
+        // }
 
-    public:
-        void construct_new_write()
+        construct_new_write();
+
+        char tx[write.size()];
+        strcpy(tx, write.c_str());
+
+        char lastByteRead = 0x00;
+        int charIndex = 0;
+
+        while (lastByteRead != 0x03)
         {
-            try
+            uint8_t nextWrite[1];
+            nextWrite[0] = sizeof(tx) <= charIndex ? (uint8_t)tx[charIndex] : 0x00;
+            uint8_t rx[1];
+
+            spi_write_read_blocking(spi0, nextWrite, rx, 1);
+            lastByteRead = rx[1];
+            if (rx[1] > 0x20)
             {
-
-                pause_updates = true;
-
-                while (updates_occurring == true)
-                {
-                    tight_loop_contents();
-                }
-                
-                write.swap(loadedWrite);
-
-                pause_updates = false;
-                
+                read.push_back(static_cast<char>(rx[1]));
             }
-            catch (...)
-            {
-                printf("could not construct new write");
-                return;
-            }
+            charIndex = charIndex + 1;
         }
 
-// public:
-//     uint waitForByteLengthMessage() {
-//             uint8_t check_read[4];
-//             uint8_t check_write[4];
+        process_command(read, read.size());
+    }
+    // uint exchangeByteMessage()
+    // {
+    //     try
+    //     {
 
-//             int sizeOfWrite = sizeof(write_buffer);
+    //         construct_new_write();
 
-//             convertInt32ToUint8Array(check_write, sizeOfWrite);
+    //         char rx_length[10];
+    //         char tx_length[10];
 
-//             uint8_t temp_read[1];
-//             uint8_t temp_write[1] = {0x02};
-//             for(int i = 0; i < 6; i++) {
-//                 if(i == 0) {
-//                     spi_write_read_blocking(spi0, temp_write, temp_read, 1);
-//                     if(temp_read[0] == 0x02) continue;
-//                     else i--;
-//                 } else {
-//                     temp_write[0] = check_write[i - 1];
-//                     spi_write_read_blocking(spi0, temp_write, temp_read, 1);
-//                     if(temp_read[0] == 0x03) continue;
-//                     if(i > 4) break;
-//                     check_read[i - 1] = temp_read[0];
-//                 }
-//                 // spi_write
-//             };
-//             // spi_write_read_blocking(spi0, check_write, check_read, 4);
+    //         memset(tx_length, 0x00, sizeof(tx_length));
+    //         memset(rx_length, 0x00, sizeof(rx_length));
 
-//             uint returnedLength = convertByteArrayToInt(check_read);
+    //         string writeStrengthLength = to_string(write.size());
+    //         strcpy(tx_length, writeStrengthLength.c_str());
 
-//             uint exchangeLength;
+    //         spi_write_read_blocking(spi0, (uint8_t *)tx_length, (uint8_t *)rx_length, 10);
 
-//             if (returnedLength > sizeOfWrite)
-//             {
-//                 exchangeLength = returnedLength;
-//             }
-//             else
-//             {
-//                 exchangeLength = sizeOfWrite;
-//             }
+    //         uint sentNumber = std::atoi(rx_length);
 
-//             return exchangeLength;
-//     }
-    uint exchangeByteMessage()
+    //         uint transactionSize = max(sentNumber, write.size());
+
+    //         char read_ar[transactionSize];
+    //         char write_ar[transactionSize];
+
+    //         memset(read_ar, 0x00, transactionSize);
+    //         memset(write_ar, 0x00, transactionSize);
+
+    //         for (int i = 0; i < write.size(); i++)
+    //         {
+    //             write_ar[i] = write[i];
+    //         }
+
+    //         spi_write_read_blocking(spi0, (uint8_t *)write_ar, (uint8_t *)read_ar, transactionSize);
+
+    //         string read(read_ar);
+
+    //         process_command(read, read.size());
+
+    //         return 1;
+    //     }
+    //     catch (...)
+    //     {
+    //         printf("Single byte exchange failed");
+    //         return -1;
+    //     }
+    // }
+
+private:
+    void construct_new_write()
     {
         try
         {
 
-            construct_new_write();
-            
-            char rx_length[10];
-            char tx_length[10];
+            pause_updates = true;
 
-            memset(tx_length, 0x00, sizeof(tx_length));
-            memset(rx_length, 0x00, sizeof(rx_length));
-            
-            string writeStrengthLength = to_string(write.size());
-            strcpy(tx_length, writeStrengthLength.c_str());
-
-            spi_write_read_blocking(spi0, (uint8_t *)tx_length, (uint8_t *)rx_length, 10);
-
-            uint sentNumber = std::atoi(rx_length);
-
-            uint transactionSize = max(sentNumber, write.size());
-
-            char read_ar[transactionSize];
-            char write_ar[transactionSize];
-
-            memset(read_ar, 0x00, transactionSize);
-            memset(write_ar, 0x00, transactionSize);
-
-            for(int i = 0; i < write.size(); i++) {
-                write_ar[i] = write[i];
+            while (updates_occurring == true)
+            {
+                tight_loop_contents();
             }
+            string writeWithStartStop = '\u0002' + loadedWrite + '\u0003';
 
-            spi_write_read_blocking(spi0, (uint8_t *)write_ar, (uint8_t *)read_ar, transactionSize);
+            write.swap(loadedWrite);
 
-            string read(read_ar);
-
-            process_command(read, read.size());
-
-            return 1;
+            pause_updates = false;
         }
         catch (...)
         {
-            printf("Single byte exchange failed");
-            return -1;
+            printf("could not construct new write");
+            return;
         }
+    }
+
+public:
+    void readOutSpiBuffer() {
+
+        if(spi_is_readable(spi0) == false) return;
+    
+        vector<char> dynamicRead;
+        
+        while (spi_is_readable(spi0))
+        {
+            uint8_t rx[1] = {0x00};
+            spi_read_blocking(spi0, {0x00}, rx, 1);
+            if (rx[0] > 0x14)
+            {
+                dynamicRead.push_back(rx[0]);
+            }
+        }
+
+        string readBytes(dynamicRead.data(), dynamicRead.size());
+
+        process_command(readBytes, readBytes.size());
+
+    }
+    void writeOutLatestStatement() {
+
+        if(spi_is_writable(spi0) == false) return;
+
+        construct_new_write();
+
+        char write_ar[write.size()];
+
+        memset(write_ar, 0x00, write.size());
+
+        for (int i = 0; i < write.size(); i++) {
+            write_ar[i] = write[i];
+        };
+
+        spi_write_blocking(spi0, (uint8_t *)write_ar, sizeof(write_ar));
+
+        loadedWrite.clear();
+
+    }
+    void fullReadWriteTransfer()
+    {
+
+        vector<char> dynamicRead; 
+        char tx[6] = {0x02, 'P', 'i', 'c', 'o', 0x03};
+        bool writeReady = spi_is_writable(spi0);
+        bool readReady = spi_is_readable(spi0);
+
+        if(writeReady == true && readReady == false) {
+            spi_write_blocking(spi0, (uint8_t *)tx, sizeof(tx));
+        } else if (writeReady == false && readReady == true) {
+            while(spi_is_readable(spi0)) {
+                uint8_t rx[1] = {0x00};
+                spi_read_blocking(spi0, {0x00} ,rx, 1);
+                if(rx[0] > 0x14) {
+                    dynamicRead.push_back(rx[0]);
+                }
+            }
+        } else if (writeReady && readReady) {
+            int byteIndex = 0;
+            while(spi_is_readable(spi0) && spi_is_writable(spi0)) {
+                uint8_t nextWrite[1] = {0x00};
+                nextWrite[0] = sizeof(tx) > byteIndex ? tx[byteIndex] : 0x00;
+                uint8_t nextRead[1] = {0x00};
+                spi_write_read_blocking(spi0, nextWrite, nextRead, 1);
+                if(nextRead[0] > 0x14) dynamicRead.push_back(nextRead[0]);
+                byteIndex = byteIndex + 1;
+            }
+            if(byteIndex < sizeof(tx) && spi_is_writable(spi0)) {
+                uint remainingWriteLength = sizeof(tx) - byteIndex;
+                uint8_t remainingWrite[remainingWriteLength];
+                for(int i = 0; i < remainingWriteLength; i++) {
+                    remainingWrite[i] = tx[i + remainingWriteLength];
+                }
+                spi_write_blocking(spi0, remainingWrite, remainingWriteLength);
+            }
+        } else return;
+
+        string readBytes(dynamicRead.data(), dynamicRead.size());
+
+        process_command(readBytes, readBytes.size());
+
     }
 };

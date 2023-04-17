@@ -4,7 +4,8 @@ using translationFunc = function<void(picojson::value)>;
 
 bool pause_updates = false;
 bool updates_occurring = false;
-string loadedWrite = "pico";
+string loadedWrite = "Pico";
+string lastRead;
 bool clear = false;
 vector<PositioningServo> servos;
 vector<MovementSeries> movementSeriesList;
@@ -105,13 +106,17 @@ int process_command(string jsonString, int commandLength)
 
         updates_occurring = true;
 
+        lastRead = lastRead + jsonString;
+
         picojson::value parsedCommand;
 
         string parsingError = picojson::parse(parsedCommand, jsonString);
 
-        if (!parsingError.empty())
+        if (!parsingError.empty()) {
+            loadedWrite = '\u0002' + "{\"failure\": \"" + parsingError + "\"}\u0003";
             throw parsingError;
-
+        }
+        
         if (!parsedCommand.is<picojson::object>())
             throw "Sent value is not a proper value";
 
