@@ -4,7 +4,7 @@ using translationFunc = function<void(picojson::value)>;
 
 bool pause_updates = false;
 bool updates_occurring = false;
-string loadedWrite = "Pico";
+string loadedWrite = "";
 string lastRead;
 bool clear = false;
 vector<PositioningServo> servos;
@@ -104,6 +104,9 @@ int process_command(string jsonString, int commandLength)
     {
         int passcode = 0;
 
+        replace(jsonString.begin(), jsonString.end(), '\u0002', ' ');
+        replace(jsonString.begin(), jsonString.end(), '\u0003', ' ');
+
         updates_occurring = true;
 
         lastRead = lastRead + jsonString;
@@ -113,7 +116,7 @@ int process_command(string jsonString, int commandLength)
         string parsingError = picojson::parse(parsedCommand, jsonString);
 
         if (!parsingError.empty()) {
-            loadedWrite = '\u0002' + "{\"failure\": \"" + parsingError + "\"}\u0003";
+            // loadedWrite = '\u0002' + "{\"failure\": \"" + parsingError + "\"}\u0003";
             throw parsingError;
         }
         

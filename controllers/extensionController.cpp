@@ -64,8 +64,8 @@ public:
     int runExtensions()
     {
         try {
-            while (true)
-            {   
+            // while (true)
+            // {   
                 while(clearing == true) {
                     tight_loop_contents();
                 }
@@ -77,7 +77,7 @@ public:
                     }
                 }
                 inUse = false;
-            }
+            // }
         } catch (...) {
             return 1;
         }

@@ -7,14 +7,17 @@
  * @licence     MIT
  *
  */
-#include "main.h"
+#include "main.h" 
 using namespace std;
 
 ExtensionController controller;
 const uint LED = PICO_DEFAULT_LED_PIN;
 
-int main()
-{
+// void splitToSecondCore() {
+//     controller.runExtensions();
+// }
+
+int main() {
     stdio_init_all();
 
     PCA9685 ServoController(0.f, 181.f, 64, 0, 1);
@@ -54,11 +57,12 @@ int main()
 
     communication.setToSlave();
 
+    // piI2cCommumnication piComs;
+
     while (true)
     {
         gpio_put(LED, 0);
-        // communication.readOutSpiBuffer();
-        // communication.writeOutLatestStatement();
+        communication.transfer32Bytes();
         gpio_put(LED, 1);
         if (ExtensionTrackerList.size() > 0)
         {
@@ -74,6 +78,7 @@ int main()
                 ExtensionTrackerList.erase(ExtensionTrackerList.begin());
                 controller.setNewExtensionTracker(zeroIndexTracker);
             }
+            ExtensionTrackerList.clear();
         }
         if (seriesCommands.size() > 0)
         {
@@ -92,6 +97,7 @@ int main()
                     controller.setNewMovementSeriesForExtension(ext.name, ms);
                 }
             }
+            movementSeriesList.clear();
         }
         if (commands.size() > 0)
         {
@@ -99,12 +105,14 @@ int main()
             {
                 controller.setExtensionToPoint(com);
             }
+            commands.clear();
         }
         if (clear == true)
         {
             controller.clearAllItems();
             clear = false;
         }
+        controller.runExtensions();
     }
 
     return 0;
