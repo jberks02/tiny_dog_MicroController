@@ -26,6 +26,7 @@ void setupExtensionTracker(picojson::value json)
 void processNewMotor(picojson::value json)
 {
     PositioningServoArgs argStruct(json);
+    
     PositioningServo newMotor(
         argStruct.servoIndex, argStruct.movementType, argStruct.defaultAngle,
         argStruct.servoPosition, argStruct.conversionType,

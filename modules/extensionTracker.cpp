@@ -18,8 +18,8 @@ private:
     TriangleTracker yzTriangle = TriangleTracker({{2.f, 0.f}, {1.f, 2.f}, {0.f, 0.f}});
     // vector<servoCommand> servoCalls;
     uint64_t startUp = time_us_64();
-    vector<extensionCommand> extensionCalls;
     vector<float> coordinate;
+    vector<extensionCommand> extensionCalls;
 public:
     vector<PositioningServo> mServos;
     vector<MovementSeries> MovementSets;
