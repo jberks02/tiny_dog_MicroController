@@ -19,11 +19,11 @@ private:
     // vector<servoCommand> servoCalls;
     uint64_t startUp = time_us_64();
     vector<float> coordinate;
-    vector<extensionCommand> extensionCalls;
 public:
     vector<PositioningServo> mServos;
     vector<MovementSeries> MovementSets;
     vector<float> currentPosition;
+    vector<extensionCommand> extensionCalls;
 public:
     string name;
 
@@ -113,12 +113,13 @@ public:
             
 
         uint64_t nextCall = extensionCalls[0].executionMoment;
-
+        float servoAngles[3] = {mServos[0].currentAngle, mServos[1].currentAngle, mServos[2].currentAngle};
         if (now > nextCall)
         {
             currentPosition = extensionCalls[0].coordinate;
             getServoAnglesForPoint(extensionCalls[0].coordinate);
             extensionCalls.erase(extensionCalls.begin());
+            cout << servoAngles[0] << servoAngles[1] << servoAngles[2] << endl;
         };
     }
     void addMovementSeries(MovementSeries newMove)

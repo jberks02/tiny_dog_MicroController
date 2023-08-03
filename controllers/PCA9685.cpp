@@ -163,5 +163,6 @@ public:
         reg_write(highByteServoReg, highByte, 1);
 
         currentAngle[servo] = angle;
+        
     };
 };

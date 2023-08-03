@@ -7,23 +7,39 @@
  * @licence     MIT
  *
  */
-#include "main.h" 
+#include "main.h"
 using namespace std;
 
-ExtensionController controller;
+ExtensionController *controller = NULL;
 const uint LED = PICO_DEFAULT_LED_PIN;
 
 void splitToSecondCore()
 {
-    controller.runExtensions();
+    try
+    {
+        controller->runExtensions();
+    }
+    catch (...)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            int ledState = gpio_get(LED);
+            gpio_put(LED, ledState == 0);
+            sleep_ms(200);
+        }
+        splitToSecondCore();
+    }
 }
 
- int main() {
+int main()
+{
     stdio_init_all();
 
-    PCA9685 ServoController(0.f, 181.f, 64, 0, 1);
+    controller = new ExtensionController();
 
-    controller.setServoController(&ServoController);
+    PCA9685 ServoController(0.f, 181.f, 64, 4, 5);
+
+    controller->setServoController(&ServoController);
 
     gpio_init(LED);
 
@@ -43,9 +59,7 @@ void splitToSecondCore()
         gpio_put(LED, 0);
         communication.transfer32Bytes();
         gpio_put(LED, 1);
-        if(controller.endEffectors.size() > 0 & controller.endEffectors[0].mServos.size() > 0) {
-            PositioningServo servo = controller.endEffectors[0].mServos[0];
-        }
+
         if (ExtensionTrackerList.size() > 0)
         {
             for (auto &zeroArg : ExtensionTrackerList)
@@ -58,7 +72,7 @@ void splitToSecondCore()
                                                    servos[zeroArg.servos[1]],
                                                    servos[zeroArg.servos[2]]});
                 ExtensionTrackerList.erase(ExtensionTrackerList.begin());
-                controller.setNewExtensionTracker(zeroIndexTracker);
+                controller->setNewExtensionTracker(zeroIndexTracker);
             }
             ExtensionTrackerList.clear();
         }
@@ -66,7 +80,7 @@ void splitToSecondCore()
         {
             for (auto &com : seriesCommands)
             {
-                controller.prepareNextSeries(com);
+                controller->prepareNextSeries(com);
             }
             seriesCommands.clear();
         }
@@ -74,9 +88,9 @@ void splitToSecondCore()
         {
             for (auto &ms : movementSeriesList)
             {
-                for (auto &ext : controller.endEffectors)
+                for (auto &ext : controller->endEffectors)
                 {
-                    controller.setNewMovementSeriesForExtension(ext.name, ms);
+                    controller->setNewMovementSeriesForExtension(ext.name, ms);
                 }
             }
             movementSeriesList.clear();
@@ -85,13 +99,13 @@ void splitToSecondCore()
         {
             for (auto &com : commands)
             {
-                controller.setExtensionToPoint(com);
+                controller->setExtensionToPoint(com);
             }
             commands.clear();
         }
         if (clear == true)
         {
-            controller.clearAllItems();
+            controller->clearAllItems();
             clear = false;
         }
     }
