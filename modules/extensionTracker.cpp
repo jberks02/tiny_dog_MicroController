@@ -105,48 +105,13 @@ class ExtensionTracker {
         float servoAngles[3] = { mServos[0].currentAngle, mServos[1].currentAngle, mServos[2].currentAngle };
         if (now > nextCall) {
             currentPosition = extensionCalls[0].coordinate;
-            getServoAnglesForPoint(extensionCalls[0].coordinate);
+            setMotorAnglesForNewPoint(&extensionCalls[0].coordinate);
             extensionCalls.erase(extensionCalls.begin());
             cout << servoAngles[0] << servoAngles[1] << servoAngles[2] << endl;
         };
     }
     void addMovementSeries(MovementSeries newMove) {
         MovementSets.push_back(newMove);
-    }
-    void getServoAnglesForPoint(vector<float> newEndEffectorPoint) {
-        // set up vars that will be needed throughout
-        float floatContainer[3] = { 0.f, 0.f, 0.f };
-        vector<float> xyNewCoordinate = { newEndEffectorPoint[0], newEndEffectorPoint[1] };
-        vector<float> newYZcoordinate = { newEndEffectorPoint[1], newEndEffectorPoint[2] };
-        vector<float> standardZero(coordinate);
-        // sum of rotations will always find a good result, linear translations however will not so those will have to be done first,
-        float newXYcLength = calculateDistance(xy[0], xyNewCoordinate);
-        float newyzEndYPlaneLength = calculateDistance(yz[1], newYZcoordinate);
-        float linearTranslationLength = newXYcLength > newyzEndYPlaneLength ? newXYcLength : newyzEndYPlaneLength;
-        floatContainer[1] = findLinearTranslation(&xyTriangle, linearTranslationLength, &standardZero);
-        floatContainer[1] = mServos[1].convert(standardZero[1], xyNewCoordinate[1], floatContainer[1]);
-        // ensure that relevant points need rotation before starting process;
-        float currentAndDestinationXcoordinateDifference = standardZero[0] - xyNewCoordinate[0];
-        if (currentAndDestinationXcoordinateDifference != 0) {
-            floatContainer[0] = findRotationTranslation(mServos[0].servoPosition, xyNewCoordinate, standardZero);
-            floatContainer[0] = mServos[0].convert(standardZero[0], xyNewCoordinate[0], floatContainer[0]);
-        }
-        else {
-            floatContainer[0] = mServos[0].defaultAngle;
-        }
-        float curAndDestDifferenceOnZ = newYZcoordinate[1] - standardZero[2];
-        if (curAndDestDifferenceOnZ != 0) {
-            floatContainer[2] = findRotationTranslation({ mServos[2].servoPosition[1], mServos[2].servoPosition[2] }, newYZcoordinate, { coordinate[1], coordinate[2] });
-            floatContainer[2] = mServos[2].convert(standardZero[2], newYZcoordinate[1], floatContainer[2]);
-        }
-        else {
-            floatContainer[2] = mServos[2].defaultAngle;
-        }
-        for (int i = 0; i < 3; i++) {
-            mServos[i].currentAngle = floatContainer[i];
-        };
-
-        xyTriangle.setSideCLength(calculateDistance(xy[0], xy[2]));
     }
     void setMotorAnglesForNewPoint(vector<float>* newPoint) {
         vector<float> newXyCoordinate = { newPoint->at(0), newPoint->at(1) };
