@@ -3,12 +3,12 @@ using namespace std;
 
 struct ExtensionTrackerArgs {
     public:
-        string name;
-        vector<vector<float>> yzPlane;
-        vector<vector<float>> xyPlane;
-        vector<float> defaultCoordinate;
-        // x, y z ordering on servos indexes
-        vector<float> servos;
+    string name;
+    vector<vector<float>> yzPlane;
+    vector<vector<float>> xyPlane;
+    vector<float> defaultCoordinate;
+    // x, y z ordering on servos indexes
+    vector<float> servos;
     ExtensionTrackerArgs(picojson::value jsonArg) {
         name = jsonArg.get("name").get<string>();
         picojson::value defaultCoordinateList = jsonArg.get("defaultCoordinate");
@@ -24,13 +24,13 @@ struct ExtensionTrackerArgs {
 
 struct PositioningServoArgs {
     public:
-        int servoIndex;
-        char movementType;
-        float defaultAngle;
-        vector<float> servoPosition;
-        string conversionType;
-        bool inverted;
-        string motorType;
+    int servoIndex;
+    char movementType;
+    float defaultAngle;
+    vector<float> servoPosition;
+    string conversionType;
+    bool inverted;
+    string motorType;
     PositioningServoArgs(picojson::value jsonArg) {
         conversionType = jsonArg.get("conversionType").get<string>();
         motorType = jsonArg.get("motorType").get<string>();
@@ -45,10 +45,10 @@ struct PositioningServoArgs {
 
 struct MovementSeriesArgs {
     public:
-        string name;
-        string type;
-        int millisecondDelay;
-        vector<vector<float>> series;
+    string name;
+    string type;
+    int millisecondDelay;
+    vector<vector<float>> series;
     MovementSeriesArgs(picojson::value jsonArg) {
         name = jsonArg.get("name").get<string>();//.to_str();
         type = jsonArg.get("type").get<string>();
@@ -60,9 +60,9 @@ struct MovementSeriesArgs {
 
 struct ExtensionCommandArgs {
     public:
-        string name;
-        vector<float> coordinate;
-        uint64_t postDelay;
+    string name;
+    vector<float> coordinate;
+    uint64_t postDelay;
     ExtensionCommandArgs(picojson::value jsonArg) {
         name = jsonArg.get("name").get<string>();
         postDelay = jsonArg.get("postDelay").get<double>();
@@ -73,9 +73,9 @@ struct ExtensionCommandArgs {
 
 struct SeriesCommandArgs {
     public:
-        string name;
-        string seriesName;
-        int iterations;
+    string name;
+    string seriesName;
+    int iterations;
     SeriesCommandArgs(picojson::value jsonArg) {
         name = jsonArg.get("name").get<string>();
         seriesName = jsonArg.get("seriesName").get<string>();
