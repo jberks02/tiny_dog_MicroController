@@ -132,13 +132,6 @@ public:
         {
             newAngleValue = newAngle;
         }
-        // if(inverted == true & newAngleValue > 90.f) {
-        //     return 180 - newAngleValue;
-        // } else if (inverted == true & newAngleValue < 90.f) {
-        //     return newAngleValue - 180;
-        // } else {
-        //     return newAngleValue;
-        // }
         return inverted == true ? 180 - newAngleValue : newAngleValue;
     }
     void setQuadraticFactors(map<char, float> factors)
