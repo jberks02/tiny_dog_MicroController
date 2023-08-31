@@ -89,9 +89,9 @@ map<string, translationFunc> commandMapping{
     {"DELETEALLSTRUCTURES", clearAllItems},
     {"READMOTORS", createMotorOutputToRead}
 };
-
 int process_command(string jsonString, int commandLength) {
     try {
+
         int passcode = 0;
 
         replace(jsonString.begin(), jsonString.end(), '\u0002', ' ');
@@ -110,12 +110,21 @@ int process_command(string jsonString, int commandLength) {
             throw parsingError;
         }
 
-        if (!parsedCommand.is<picojson::object>())
-            throw "Sent value is not a proper value";
 
-        string command = parsedCommand.get("command").get<string>();
 
-        commandMapping[command](parsedCommand);
+        if (parsedCommand.is<picojson::object>()) {
+            string command = parsedCommand.get("command").get<string>();
+            commandMapping[command](parsedCommand);
+        } else if (parsedCommand.is<picojson::array>()) {
+            picojson::array& listFromReceivedString = parsedCommand.get<picojson::array>();
+            for (picojson::array::const_iterator i = listFromReceivedString.begin(); i != listFromReceivedString.end(); ++i) {
+                if (i->is<picojson::object>()) {
+                    string command = i->get("command").get<string>();
+                    commandMapping[command](*i);
+                }
+            }
+        }
+            // throw "Sent value is not a proper value";
 
         updates_occurring = false;
         return passcode;

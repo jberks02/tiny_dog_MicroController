@@ -53,3 +53,15 @@ uint convertByteArrayToInt(uint8_t* list) {
     memcpy(&value, list, sizeof(int));
     return value;
 }
+
+string returnArrayOfJsonsFromList(vector<string>* jsons) {
+    stringstream result;
+    int endOfList = jsons->size();
+    result << "[";
+    for(int i = 0; i < endOfList; i++) {
+        result << jsons->at(i);
+        if(i + 1 < endOfList) result << ",";
+    }
+    result << "]";
+    return result.str();
+}

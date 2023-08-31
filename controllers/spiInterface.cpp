@@ -7,11 +7,11 @@ class SpiInterface {
     string read = "";
     bool writeNeedsConstruct = true;
     public:
-    SpiInterface(uint tx = 19, uint sck = 18, uint csn = 17, uint rx = 16, uint baudrate = 7000, uint CPOL = 0, uint CPHA = 0) {
+    SpiInterface(uint tx = 19, uint sck = 18, uint csn = 17, uint rx = 16, uint baudrate = 125000, uint CPOL = 0, uint CPHA = 0) {
         try {
             spi_init(spi0, baudrate);
             spi_set_slave(spi0, true);
-            spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_LSB_FIRST);
+            spi_set_format(spi0, 8, SPI_CPOL_1, SPI_CPHA_1, SPI_LSB_FIRST);
             gpio_set_function(rx, GPIO_FUNC_SPI);
             gpio_set_function(sck, GPIO_FUNC_SPI);
             gpio_set_function(tx, GPIO_FUNC_SPI);
@@ -23,83 +23,39 @@ class SpiInterface {
         }
     }
     void setToSlave() {
-        spi_set_slave(spi0, true);
+        // spi_set_slave(spi0, true);
     }
-
-    private:
-    void construct_new_write() {
+    void transferBytes(string* message, bool* updateIncoming) {
+        // if (spi_is_readable(spi0) == false) return;
+        // if (message->size() > 10000) return;
         try {
-
-            pause_updates = true;
-
-            while (updates_occurring == true) {
-                tight_loop_contents();
+            char lengthDst[5];
+            char lengthSrc[5];
+            memset(lengthDst, 0x00, 5);
+            memset(lengthSrc, 0x00, 5);
+            multicore_fifo_drain();
+            string messageLength = to_string(message->size());
+            for (int c = 0; c < messageLength.size(); c++) {
+                lengthSrc[c] = messageLength.at(c);
             }
-            string writeWithStartStop = '\u0002' + loadedWrite + '\u0003';
-
-            write.swap(loadedWrite);
-
-            pause_updates = false;
-
-            writeNeedsConstruct = false;
-
-        } catch (...) {
-            printf("could not construct new write");
-            return;
-        }
-    }
-
-    public:
-    void transfer32Bytes() {
-        try {
-
-            if (spi_is_readable(spi0) == false) return;
-            if (writeNeedsConstruct == true) {
-                // construct_new_write();
+            spi_write_read_blocking(spi0, (uint8_t*)lengthSrc, (uint8_t*)lengthDst, 5);
+            int receivedLength = stoi(string(lengthDst));
+            printf(lengthDst);
+            int transferLength = message->size() > receivedLength ? message->size() : receivedLength;
+            char writeSet[transferLength];
+            char readSet[transferLength];
+            memset(writeSet, 0x00, transferLength);
+            memset(readSet, 0x00, transferLength);
+            for (int c = 0; c < message->size(); c++) {
+                writeSet[c] = message->at(c);
             };
-
-            char read_ar[32];
-            char write_ar[32];
-
-            memset(read_ar, 0x00, 32);
-            memset(write_ar, 0x00, 32);
-
-            // for(int i = 0; i < 32; i++) {
-            //     if(write.length() > 0) {
-            //         write_ar[i] = write[0];
-            //         write.erase(write.begin());
-            //     } else {
-            //         writeNeedsConstruct = true;
-            //     }
-            // }
-
-            spi_read_blocking(spi0, 0x01, (uint8_t*)read_ar, 32);
-
-            bool readComplete = false;
-
-            read = read + string(read_ar);
-
-            vector<uint8_t> templist;
-
-            for (int i = 0; i < 32; i++) {
-                uint8_t byteValue = (uint8_t)read_ar[i];
-                templist.push_back(byteValue);
-                if (byteValue == 0x03) {
-                    readComplete = true;
-                }
-                if (byteValue < 0x20) {
-                    read_ar[i] = ' ';
-                }
-            };
-
-            if (readComplete == true) {
-                process_command(read, read.size());
-                cout << templist[1] << endl;
-                read.clear();
-            }
-
+            spi_write_read_blocking(spi0, (uint8_t*)writeSet, (uint8_t*)readSet, transferLength);
+            // sleep_ms(500);
+            string readable(readSet);
+            printf(readSet);
+            process_command(readable, readable.size());
         } catch (...) {
-            cout << "Failure to transfer 32 Bytes" << endl;
+            printf("Error thrown in spi transfer");
         }
     }
 };

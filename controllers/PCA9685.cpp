@@ -77,7 +77,7 @@ class PCA9685 {
         // come out of sleep
         uint8_t wakeup[1] = { WAKE_UP };
         reg_write(READ_READY_ON_DEVICE, wakeup, 1);
-        float minMilli = 175.f;
+        float minMilli = 200.f;
         float maxMilli = 1275.f;
         angleMultiplier = (maxMilli - minMilli) / (servoAngleMax - servoAngleMin);
     }

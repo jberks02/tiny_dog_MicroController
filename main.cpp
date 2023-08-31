@@ -9,27 +9,29 @@
  */
 #include "main.h"
 using namespace std;
-
 ExtensionController* controller = NULL;
+SpiInterface* communication = NULL;
+
 const uint LED = PICO_DEFAULT_LED_PIN;
+bool updateComing = false;
 
 void splitToSecondCore() {
     try {
-        controller->runExtensions();
-    } catch (...) {
-        for (int i = 0; i < 4; i++) {
-            int ledState = gpio_get(LED);
-            gpio_put(LED, ledState == 0);
-            sleep_ms(200);
+        while (true) {
+            controller->runExtensions();
         }
-        splitToSecondCore();
+    } catch (...) {
+        printf("Failure in second core.");
     }
 }
 
 int main() {
     stdio_init_all();
-
+    printf("StartUpInProgress");
     controller = new ExtensionController();
+    communication = new SpiInterface();
+    // ExtensionController controller;
+    // SpiInterface communication;
 
     PCA9685 ServoController(0.f, 181.f, 64, 4, 5);
 
@@ -41,55 +43,71 @@ int main() {
 
     gpio_put(LED, 1);
 
-    SpiInterface communication;
+    AdcController variableInputs;
 
-    communication.setToSlave();
+    communication->setToSlave();
 
     multicore_reset_core1();
     multicore_launch_core1(splitToSecondCore);
 
     while (true) {
-        gpio_put(LED, 0);
-        communication.transfer32Bytes();
-        gpio_put(LED, 1);
-
-        if (ExtensionTrackerList.size() > 0) {
-            for (auto& zeroArg : ExtensionTrackerList) {
-                ExtensionTracker zeroIndexTracker(zeroArg.name,
-                    zeroArg.yzPlane,
-                    zeroArg.xyPlane,
-                    zeroArg.defaultCoordinate,
-                    { servos[zeroArg.servos[0]],
-                     servos[zeroArg.servos[1]],
-                     servos[zeroArg.servos[2]] });
-                ExtensionTrackerList.erase(ExtensionTrackerList.begin());
-                controller->setNewExtensionTracker(zeroIndexTracker);
-            }
-            ExtensionTrackerList.clear();
-        }
-        if (seriesCommands.size() > 0) {
-            for (auto& com : seriesCommands) {
-                controller->prepareNextSeries(com);
-            }
-            seriesCommands.clear();
-        }
-        if (movementSeriesList.size() > 0) {
-            for (auto& ms : movementSeriesList) {
-                for (auto& ext : controller->endEffectors) {
-                    controller->setNewMovementSeriesForExtension(ext.name, ms);
+        try {
+            gpio_put(LED, 1);
+            sleep_ms(500);
+            vector<string> applicationBodies = { variableInputs.constructJsonOfOutput(), controller->constructJsonOfBody() };
+            string write = returnArrayOfJsonsFromList(&applicationBodies);
+            // multicore_launch_core1(splitToSecondCore);
+            // multicore_fifo_pop_blocking();
+            communication->transferBytes(&write, &updateComing);
+            // multicore_reset_core1();
+            applicationBodies.clear();
+            write.clear();
+            gpio_put(LED, 0);
+            if (ExtensionTrackerList.size() > 0) {
+                printf("Writing Extensions");
+                for (auto& zeroArg : ExtensionTrackerList) {
+                    ExtensionTracker zeroIndexTracker(zeroArg.name,
+                        zeroArg.yzPlane,
+                        zeroArg.xyPlane,
+                        zeroArg.defaultCoordinate,
+                        { servos[zeroArg.servos[0]],
+                         servos[zeroArg.servos[1]],
+                         servos[zeroArg.servos[2]] });
+                    // ExtensionTrackerList.erase(ExtensionTrackerList.begin());
+                    controller->setNewExtensionTracker(zeroIndexTracker);
                 }
+                ExtensionTrackerList.clear();
             }
-            movementSeriesList.clear();
-        }
-        if (commands.size() > 0) {
-            for (auto& com : commands) {
-                controller->setExtensionToPoint(com);
+            if (seriesCommands.size() > 0) {
+                for (auto& com : seriesCommands) {
+                    controller->prepareNextSeries(com);
+                }
+                seriesCommands.clear();
             }
-            commands.clear();
-        }
-        if (clear == true) {
-            controller->clearAllItems();
-            clear = false;
+            if (movementSeriesList.size() > 0) {
+                for (auto& ms : movementSeriesList) {
+                    for (auto& ext : controller->endEffectors) {
+                        controller->setNewMovementSeriesForExtension(ext.name, ms);
+                    }
+                }
+                movementSeriesList.clear();
+            }
+            if (commands.size() > 0) {
+                printf("writingCommand");
+                for (auto& com : commands) {
+                    controller->setExtensionToPoint(com);
+                }
+                commands.clear();
+            }
+            if (clear == true) {
+                multicore_reset_core1();
+                controller->inUse = false;
+                controller->clearAllItems();
+                clear = false;
+                multicore_launch_core1(splitToSecondCore);
+            }
+        } catch (...) {
+            printf("Primary Loop Failure");
         }
     }
     return 0;

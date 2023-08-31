@@ -5,12 +5,24 @@ class ExtensionController {
     public:
     vector<ExtensionTracker> endEffectors;
     vector<extensionSeriesCommand> extensionSeriesCall;
-    // PCA9685 *servoController = NULL;
     PCA9685* servoController = NULL;
     bool clearing = false;
     bool inUse = false;
 
     public:
+    string constructJsonOfBody() {
+        stringstream controller;
+        controller << "{ \"Extensions\":";
+        controller << to_string(endEffectors.size()) << ",";
+        controller << "\"seriesCalls\":" << to_string(extensionSeriesCall.size());
+        controller << ",\"servoAngles\":[";
+        for (int i = 0; i < 16; i++) {
+            controller << to_string(servoController->currentAngle[i]);
+            if (i + 1 < 16) controller << ",";
+        }
+        controller << "]}";
+        return controller.str();
+    }
     void clearAllItems() {
         clearing = true;
         while (inUse == true) {
@@ -55,24 +67,23 @@ class ExtensionController {
             }
         }
     }
-    int runExtensions() {
+    void runExtensions() {
         try {
-            while (true) {
-                while (clearing == true) {
-                    tight_loop_contents();
-                }
-                inUse = true;
-                for (auto& extension : endEffectors) {
-                    extension.checkAndSetNewCoordinate();
-                    for (auto& servo : extension.mServos) {
-                        servoController->servoSetAngle(servo.currentAngle, servo.servoIndex);
-                    }
-                }
-                inUse = false;
+            // while (true) {
+            while (clearing == true) {
+                tight_loop_contents();
             }
+            inUse = true;
+            for (auto& extension : endEffectors) {
+                extension.checkAndSetNewCoordinate();
+                for (auto& servo : extension.mServos) {
+                    servoController->servoSetAngle(servo.currentAngle, servo.servoIndex);
+                }
+            }
+            inUse = false;
+            // }
         } catch (...) {
-            return 1;
+            printf("Extension Run Failed");
         }
-        return 0;
     }
 };
