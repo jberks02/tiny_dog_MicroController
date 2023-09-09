@@ -5,7 +5,7 @@ struct ExtensionTrackerArgs {
     public:
     string name;
     vector<vector<float>> yzPlane;
-    vector<vector<float>> xyPlane;
+    vector<vector<float>> xzPlane;
     vector<float> defaultCoordinate;
     // x, y z ordering on servos indexes
     vector<float> servos;
@@ -13,11 +13,11 @@ struct ExtensionTrackerArgs {
         name = jsonArg.get("name").get<string>();
         picojson::value defaultCoordinateList = jsonArg.get("defaultCoordinate");
         picojson::value servoIntList = jsonArg.get("servos");
-        picojson::value xyPlaneJson = jsonArg.get("xyPlane");
+        picojson::value xzPlaneJson = jsonArg.get("xzPlane");
         picojson::value yzPlaneJson = jsonArg.get("yzPlane");
         parseNumberArrayToFloatVector(defaultCoordinateList, &defaultCoordinate);
         parseNumberArrayToFloatVector(servoIntList, &servos);
-        parseCoordinateListFromJsonArray(xyPlaneJson, &xyPlane);
+        parseCoordinateListFromJsonArray(xzPlaneJson, &xzPlane);
         parseCoordinateListFromJsonArray(yzPlaneJson, &yzPlane);
     }
 };

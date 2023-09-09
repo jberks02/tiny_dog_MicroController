@@ -68,7 +68,7 @@ int main() {
                 for (auto& zeroArg : ExtensionTrackerList) {
                     ExtensionTracker zeroIndexTracker(zeroArg.name,
                         zeroArg.yzPlane,
-                        zeroArg.xyPlane,
+                        zeroArg.xzPlane,
                         zeroArg.defaultCoordinate,
                         { servos[zeroArg.servos[0]],
                          servos[zeroArg.servos[1]],
