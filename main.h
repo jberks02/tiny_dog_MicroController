@@ -45,8 +45,7 @@
 #include "./controllers/PCA9685.cpp"
 #include "./controllers/extensionController.cpp"
 #include "./controllers/spiInterface.cpp"
-#include "./controllers/i2cInterface.cpp"
-
+#include "./inputs/adcInputs.cpp"
 #ifdef __cplusplus
 extern "C"
 {

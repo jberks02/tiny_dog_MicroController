@@ -181,3 +181,131 @@ PICO-->3V_3Vcircuit-->VCC-->Adafuit_CarrierBoard_PCA9685
 PICO-->GND_COMMON-->GND-->Adafuit_CarrierBoard_PCA9685
 PICO-->5V_5Vcircuit-->V+-->Adafuit_CarrierBoard_PCA9685
 ```
+#
+#
+# Future Work
+## Commands To direct pins for bus
+### Motor Controller Pinout Example (I2C)
+```mermaid  
+    graph TD;
+    PICO-->SDA;
+    PICO-->SCL;
+    PICO-->3v_Logic;
+    PICO-->GND;
+```
+### Motor Controller Line Specification
+```JSON
+    {
+        "command": "MOTOR LINE", //literal
+        "pins": {
+            "sda": 4, 
+            "scl": 5
+        }, 
+        "freq": 12500
+    }
+```
+This allows the higher system to specify the pins that should be used for the motor controller bus. Putting each motor controller on the bus allows us to abstract that specific logic. 
+#### Requirements
+In order to impliment this bus specification, the bus that is automatically started will have to be discarded and properly shutdown. and the pins being used will need to be freed.
+#### Implimentation
+When a command matching the MOTOR LINE specification is sent the Overarching ExtensionManager has the destroy method on all it's motor classes called. This frees the pins and destroys the classes from the list. 
+## Command to adjust channel being listened on by Motor Controller by type
+### Motor Controller Channel Update Command Example
+```JSON
+    {
+        "command": "MOTOR CONTROLLER", //literal
+        "channel": 64, //I2C channel being listened on by the I2C motor controller
+        "type": "SERVO", //SERVO, STEPPER, DC, AC options which will apply four different classes to motor control logic, which will then be sent downstream to other motors. 
+    }
+```
+#### Requirements
+When command specifying the channel of a specific motor controller, the old value is replaced with the new one. 
+#### Implimentation
+Invoking this command simply causes the set command on the correct motor controller to be invoked with the given channel value. 
+## Each Individual Pico Should Be Addressable Through Commands
+### Addressed Command Example
+```JSON
+    {
+        "addr": 0, // any number within int32 range
+        "command": "MOTOR CONTROLLER", // any command
+        "...": "Rest of command"
+    }
+```
+#### Requirements
+Each individual pico robot controller only accepts commands addressed to itself
+
+Each pico starts out having an address of "0", which can be updated to whatever value is desired by the master controller on power on. (This requires that if there are multiple picos, they can be powered on one at a time.)
+
+Address is stored in persistant memory. 
+
+Address updates are stored in persistant memory.
+
+## Read Back To Confirm Communication Bridge Established
+### Read Back Example Of Sent Message from main
+```JSON
+    {
+        "addr": 0,
+        "command": "READ BACK", 
+        "origin": "PRIMARY", 
+    }   
+```
+### Read Back Example Of Response
+```JSON
+    {
+        "command": "READ BACK", 
+        "origin": "SECONDARY", 
+        "addr": 0
+    }
+```
+#### Requirements
+When Primary Module wants to ensure an established connection with the Secondary Pico module, it will send a read back command. 
+
+The Pico then responds with the same command with an updated origin. this Origin update being read back to the Primary module allows it to confirm that the correct receiver got the message and that a bridge is established.
+## Set Up Sensor Pins On Secondary Pico
+A certain number of pins will be free on the Secondary Pico that can be used for general sensing of the environment. There are four ADC pins that can be leveraged for this as well as 10+ IO pins and pwm pins. 
+### Sensing Pin Setup Example
+```JSON
+    {
+        "addr": 0, 
+        "command": "SENSE PIN", 
+        "pin": 6, // any valid pin number can be used invalid pins will simply result in sensory input not being set up. 
+        "pin-sense-type": "IO" //IO, ADC, PWM and others. invalid pin setups will result in a soft failure.
+    }
+```
+### Sensing pin Output
+```JSON
+    [
+        {
+            "pin": 1, 
+            "value": 1
+        }, 
+        {
+            "pin": 9, 
+            "value": 288
+        }
+    ]
+```
+#### Requirements
+Command above getting sent results in an attemnpt to set up sensory input. 
+
+Sensory input can be read out as a series of pin value pairs. 
+
+Inablility to seup the described input pin is simply discarded and recovered from without failure.
+
+values are between 0 and max 32 bit integer.
+
+# Cleanup
+<ul>
+    <li>
+        Iteration generator should not wrap to meet first and last position. This causes more confusion than anything
+    </li>
+    <li>
+        movement serieses should be shared by legs since they will opten overlap that means that there will either have to be a translation interface for different legs or each one will have to use local coordinates only. 
+    </li>
+    <li>
+        Motors should inherit from a lower level class to give them common factors that gel the data strucutres of the extensions together. 
+    </li>
+    <li>
+        Need to standardize what a motor controller is and what it does. 
+    </li>
+</ul>

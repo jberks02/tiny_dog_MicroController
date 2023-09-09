@@ -16,39 +16,37 @@ using namespace std;
 #define PWM_VALUE_20ms_PULSE _u(0x78)
 #define WAKE_UP _u(0x01)
 
-class PCA9685
-{
+class PCA9685 {
 
-private:
+    private:
     uint I2CAddress;
 
-private:
+    private:
     uint sda;
 
-private:
+    private:
     uint scl;
 
-private:
+    private:
     uint freq = 100000;
 
-private:
+    private:
     int servoRegOffset = 4;
 
-private:
+    private:
     double angleMultiplier;
 
-public:
+    public:
     double sAngleMin = 0.0f;
 
-public:
+    public:
     double sAngleMax = 180.0f;
 
-public:
-    float currentAngle[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    public:
+    float currentAngle[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-public:
-    PCA9685(double servoAngleMin = 0.0f, double servoAngleMax = 180.0f, uint address = 108, uint sdaPin = 8, uint sclPin = 9)
-    {
+    public:
+    PCA9685(double servoAngleMin = 0.0f, double servoAngleMax = 180.0f, uint address = 108, uint sdaPin = 8, uint sclPin = 9) {
         // establish I2C connection
         // init pins
         sda = sdaPin;
@@ -68,31 +66,29 @@ public:
         swReset();
         // set up servo pwm settings for the board.
         // SET servo pwm clock to 20ms this can vary by servo, but 20ms is typical for hobby servos
-        uint8_t pwmbuf[1] = {PWM_VALUE_20ms_PULSE};
+        uint8_t pwmbuf[1] = { PWM_VALUE_20ms_PULSE };
         reg_write(PWM_REG_ADDRESS, pwmbuf, 1);
         // begin proper value writing for initialization
-        uint8_t zeroOutBuff[1] = {0x00};
+        uint8_t zeroOutBuff[1] = { 0x00 };
         reg_write(READ_ADDRESS_ONE, zeroOutBuff, 1);
         reg_write(READ_ADDRESS_TWO, zeroOutBuff, 1);
         reg_write(READ_ADDRESS_THREE, zeroOutBuff, 1);
         reg_write(READ_ADDRESS_FOUR, zeroOutBuff, 1);
         // come out of sleep
-        uint8_t wakeup[1] = {WAKE_UP};
+        uint8_t wakeup[1] = { WAKE_UP };
         reg_write(READ_READY_ON_DEVICE, wakeup, 1);
-        float minMilli = 175.f;
+        float minMilli = 200.f;
         float maxMilli = 1275.f;
         angleMultiplier = (maxMilli - minMilli) / (servoAngleMax - servoAngleMin);
     }
 
-private:
-    int reg_read(const uint8_t reg, uint8_t *buf, const uint8_t nbytes)
-    {
+    private:
+    int reg_read(const uint8_t reg, uint8_t* buf, const uint8_t nbytes) {
 
         int num_bytes_read = 0;
 
         // Check to make sure caller is asking for 1 or more bytes
-        if (reg < 0)
-        {
+        if (reg < 0) {
             return 0;
         }
 
@@ -103,23 +99,20 @@ private:
         return num_bytes_read;
     }
 
-private:
-    int reg_write(const uint8_t reg, uint8_t *buf, const uint8_t nbytes)
-    {
+    private:
+    int reg_write(const uint8_t reg, uint8_t* buf, const uint8_t nbytes) {
 
         int num_bytes_read = 0;
         uint8_t msg[nbytes + 1];
 
         // Check to make sure caller is sending 1 or more bytes
-        if (nbytes < 1)
-        {
+        if (nbytes < 1) {
             return 0;
         }
 
         // Append register address to front of data packet
         msg[0] = reg;
-        for (int i = 0; i < nbytes; i++)
-        {
+        for (int i = 0; i < nbytes; i++) {
             msg[i + 1] = buf[i];
         }
 
@@ -129,16 +122,14 @@ private:
         return num_bytes_read;
     }
 
-public:
-    void swReset()
-    {
-        uint8_t buf[1] = {0x01};
+    public:
+    void swReset() {
+        uint8_t buf[1] = { 0x01 };
         reg_write(KIT_RESET, buf, 1);
     }
 
-public:
-    void servoSetAngle(double angle, uint servo)
-    {
+    public:
+    void servoSetAngle(double angle, uint servo) {
         if (angle == currentAngle[servo])
             return;
 
@@ -154,15 +145,15 @@ public:
         // Calculate mills to set servo pwm to. this is currently going to use default numbers; dynamic cacalculation examples can be found in https://github.com/jberks02/buttonControlledArm
         int newServoMills = (angle * 2.2755) + 102;
 
-        uint8_t highByte[1] = {(newServoMills >> 8) & 0x01};
+        uint8_t highByte[1] = { (newServoMills >> 8) & 0x01 };
 
-        uint8_t lowByte[1] = {newServoMills & 0xFF};
+        uint8_t lowByte[1] = { newServoMills & 0xFF };
         uint8_t highByteServoReg = servoRegister + 1;
 
         reg_write(servoRegister, lowByte, 1);
         reg_write(highByteServoReg, highByte, 1);
 
         currentAngle[servo] = angle;
-        
+
     };
 };

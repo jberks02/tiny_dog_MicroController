@@ -13,28 +13,24 @@ vector<extensionCommand> commands;
 vector<ExtensionTrackerArgs> ExtensionTrackerList;
 vector<extensionSeriesCommand> seriesCommands;
 
-void setupExtensionTracker(picojson::value json)
-{
+void setupExtensionTracker(picojson::value json) {
     ExtensionTrackerArgs argStruct(json);
-    for (auto &servoIndex : argStruct.servos)
-    {
+    for (auto& servoIndex : argStruct.servos) {
         if (servos.size() < servoIndex)
             throw "Positioning Servo is missing from list" + to_string(servoIndex);
     }
     ExtensionTrackerList.push_back(argStruct);
 }
-void processNewMotor(picojson::value json)
-{
+void processNewMotor(picojson::value json) {
     PositioningServoArgs argStruct(json);
-    
+
     PositioningServo newMotor(
         argStruct.servoIndex, argStruct.movementType, argStruct.defaultAngle,
         argStruct.servoPosition, argStruct.conversionType,
         argStruct.inverted, argStruct.motorType);
     servos.push_back(newMotor);
 }
-void newMovementSeries(picojson::value json)
-{
+void newMovementSeries(picojson::value json) {
 
     MovementSeriesArgs argStruct(json);
 
@@ -46,8 +42,7 @@ void newMovementSeries(picojson::value json)
 
     movementSeriesList.push_back(newSet);
 }
-void processPositionCommand(picojson::value json)
-{
+void processPositionCommand(picojson::value json) {
 
     ExtensionCommandArgs argStruct(json);
 
@@ -55,8 +50,7 @@ void processPositionCommand(picojson::value json)
 
     commands.push_back(command);
 }
-void processExtensionSeriesCall(picojson::value json)
-{
+void processExtensionSeriesCall(picojson::value json) {
 
     SeriesCommandArgs argStruct(json);
 
@@ -65,18 +59,15 @@ void processExtensionSeriesCall(picojson::value json)
     seriesCommands.push_back(seriesCommand);
 }
 
-void createMotorOutputToRead(picojson::value _parsedCom)
-{
+void createMotorOutputToRead(picojson::value _parsedCom) {
     loadedWrite.clear();
     loadedWrite = "{ \"positioningMotors\": [";
 
-    for (int i = 0; i < servos.size(); i++)
-    {
+    for (int i = 0; i < servos.size(); i++) {
         string jsonOfMotor;
         servos[i].getJsonStringOfClass(&jsonOfMotor);
         loadedWrite.append(jsonOfMotor);
-        if (i < servos.size() - 1)
-        {
+        if (i < servos.size() - 1) {
             loadedWrite.append(",");
         }
     }
@@ -98,11 +89,9 @@ map<string, translationFunc> commandMapping{
     {"DELETEALLSTRUCTURES", clearAllItems},
     {"READMOTORS", createMotorOutputToRead}
 };
+int process_command(string jsonString, int commandLength) {
+    try {
 
-int process_command(string jsonString, int commandLength)
-{
-    try
-    {
         int passcode = 0;
 
         replace(jsonString.begin(), jsonString.end(), '\u0002', ' ');
@@ -120,19 +109,26 @@ int process_command(string jsonString, int commandLength)
             // loadedWrite = '\u0002' + "{\"failure\": \"" + parsingError + "\"}\u0003";
             throw parsingError;
         }
-        
-        if (!parsedCommand.is<picojson::object>())
-            throw "Sent value is not a proper value";
 
-        string command = parsedCommand.get("command").get<string>();
 
-        commandMapping[command](parsedCommand);
+
+        if (parsedCommand.is<picojson::object>()) {
+            string command = parsedCommand.get("command").get<string>();
+            commandMapping[command](parsedCommand);
+        } else if (parsedCommand.is<picojson::array>()) {
+            picojson::array& listFromReceivedString = parsedCommand.get<picojson::array>();
+            for (picojson::array::const_iterator i = listFromReceivedString.begin(); i != listFromReceivedString.end(); ++i) {
+                if (i->is<picojson::object>()) {
+                    string command = i->get("command").get<string>();
+                    commandMapping[command](*i);
+                }
+            }
+        }
+            // throw "Sent value is not a proper value";
 
         updates_occurring = false;
         return passcode;
-    }
-    catch (...)
-    {
+    } catch (...) {
         updates_occurring = false;
         return 1;
     }
