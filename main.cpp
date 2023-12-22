@@ -27,7 +27,7 @@ void splitToSecondCore() {
 
 int main() {
     stdio_init_all();
-    printf("StartUpInProgress");
+    printf("Start Up In Progress");
     controller = new ExtensionController();
     communication = new SpiInterface();
     // ExtensionController controller;
@@ -56,10 +56,7 @@ int main() {
             sleep_ms(500);
             vector<string> applicationBodies = { variableInputs.constructJsonOfOutput(), controller->constructJsonOfBody() };
             string write = returnArrayOfJsonsFromList(&applicationBodies);
-            // multicore_launch_core1(splitToSecondCore);
-            // multicore_fifo_pop_blocking();
             communication->transferBytes(&write, &updateComing);
-            // multicore_reset_core1();
             applicationBodies.clear();
             write.clear();
             gpio_put(LED, 0);
@@ -67,8 +64,6 @@ int main() {
                 printf("Writing Extensions");
                 for (auto& zeroArg : ExtensionTrackerList) {
                     ExtensionTracker zeroIndexTracker(zeroArg.name,
-                        zeroArg.yzPlane,
-                        zeroArg.xzPlane,
                         zeroArg.defaultCoordinate,
                         { servos[zeroArg.servos[0]],
                          servos[zeroArg.servos[1]],

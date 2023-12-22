@@ -6,7 +6,6 @@ class TriangleTracker {
     vector<float> sideLengths = { 1.f, 1.f, 1.f };
     vector<float> triangleAngles = { 60.f, 60.f, 60.f };
     vector<vector<float>> pointCoordinates;
-
     public:
     TriangleTracker(vector<vector<float>> pointCoordinates) {
         sideLengths[0] = calculateDistance(pointCoordinates[0], pointCoordinates[1]);
@@ -41,62 +40,36 @@ class TriangleTracker {
         float angleA = calculateArcCosineDegrees(sideLengths[1], sideLengths[2], sideLengths[0]);
         triangleAngles[0] = angleA;
     }
+    coordinateChanges calculateNewCoordinateChanges(float newSideLength, flatCoordinate* desiredPosition) {
 
-    public:
-    void setSideALength(float len) {
-        sideLengths[0] = len;
-        createAngles();
-    }
+        float newDegrees = calculateArcCosineDegrees(sideLengths[0], sideLengths[1], newSideLength);
+        float degreesOfChange = newDegrees - triangleAngles[2];
+        float radians = abs(degreesOfChange) * (M_PI / 180);
+        float origin[2] = { pointCoordinates[1].at(0), pointCoordinates[1].at(1) };
+        float knownEnd[2] = { pointCoordinates[2].at(0), pointCoordinates[2].at(1) };
 
-    void setSideBLength(float len) {
-        sideLengths[1] = len;
-        createAngles();
-    }
+        float vectorX = knownEnd[0] - origin[0];
+        float vectorY = knownEnd[1] - origin[1];
 
-    void setSideCLength(float len) {
-        sideLengths[2] = len;
-        createAngles();
-    }
+        float cosTheta = cos(radians);
+        float sinTheta = sin(radians);
 
-    float returnNewCangle(float a, float b, float c) {
-        // broken out into steps to make readable
-        double numerator = pow(a, 2) + pow(b, 2) - pow(c, 2);
-        double denominator = 2 * a * b;
-        double divisionResult = numerator / denominator;
-        float degreeOfAdjacentAngle = acos(divisionResult);
-        float degreeConversion = degreeOfAdjacentAngle * (180 / 3.1415);
-        return degreeConversion; // * (180 / 3.1415) turns radians into degrees.
-    }
-    void getNewEndEffectorCoordinate(vector<float>* cCordinate, float oldDistance) {
-        // Degrees × (π / 180) = Radians
-        // Radians  × (180 / π) = Degrees
-        // float oppositeAngle;
-        float xOffset;
-        float yOffset;
-        float oppositeAngle;
+        float vectorPrimeX = (cosTheta * vectorX) - (sinTheta * vectorY);
+        float vectorPrimeY = (sinTheta * vectorX) - (cosTheta * vectorY);
 
-        vector<float>
-            coordinates = { 0.f, 0.f, 0.f };
-        if (triangleAngles[1] < 90.f) {
-            // get angle used for sin calculations in degrees
-            oppositeAngle = 180 - (90 + triangleAngles[1]);
-            // convert to radians
-            oppositeAngle = oppositeAngle * (M_PI / 180);
+        flatCoordinate adjustedPosition;
+        if (degreesOfChange < 0) {
+            adjustedPosition.x = origin[0] - vectorPrimeX;
+            adjustedPosition.y = origin[1] - vectorPrimeY;
         }
         else {
-            // create angle adjacent to known angle 2 and 90 degree angle
-            float angle4 = 180 - triangleAngles[1];
-            // get new opposite angle
-            oppositeAngle = 180 - (90 + angle4);
-            // convert to radians
-            oppositeAngle = oppositeAngle * (M_PI / 180);
+            adjustedPosition.x = origin[0] + vectorPrimeX;
+            adjustedPosition.y = origin[1] + vectorPrimeY;
         }
 
-        xOffset = sin(oppositeAngle) * sideLengths[2];
-        yOffset = sqrt(pow(sideLengths[2], 2) - pow(xOffset, 2));
-        coordinates[0] = triangleAngles[1] < 90.f ? 0 - xOffset : 0 + xOffset;
-        coordinates[1] = 110 - yOffset;
+        coordinateChanges update(newDegrees, degreesOfChange, &adjustedPosition);
 
-        cCordinate->swap(coordinates);
+        return update;
+
     }
 };

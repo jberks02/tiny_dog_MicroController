@@ -23,7 +23,8 @@
       "postRestartCommands": [
         "break main",
         "continue"
-      ]
+      ],
+      "showDevDebugOutput": "raw"
     }
   ]
 }

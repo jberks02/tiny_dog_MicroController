@@ -53,7 +53,7 @@ class PositioningServo {
     string conversionType;
     vector<float> servoPosition;
     map<char, float> quadraticEquationFactors{ {'a', -0.02036}, {'b', 6.7478}, {'c', -214.8957} };
-    map<char, float> linearFactors{ {'m', 4.f}, {'b', 0} };
+    map<char, float> linearFactors{ {'m', 1.f}, {'b', 0.f} };
     map<char, float> exponentialFactors{ {'a', 1.1}, {'b', -1}, {'c', -42} };
     PositioningServo(int servoIndex, char movementType, float defaultAngle, vector<float> servoPosition, string conversionType = "default", bool inverted = false, string motorType = "servo") {
         this->servoIndex = servoIndex;
@@ -95,10 +95,10 @@ class PositioningServo {
     }
 
     public:
-    float convert(float defaultRelevantNumber, float newRelNumber, float newAngle) {
+    float convert(float endEffectorOriginPoint, float endEffectorNewPoint, float newAngle) {
         float newAngleValue;
         if (conversionType == "default") {
-            newAngleValue = defaultConversion(defaultRelevantNumber, newRelNumber, newAngle);
+            newAngleValue = defaultConversion(endEffectorOriginPoint, endEffectorNewPoint, newAngle);
         }
         else if (conversionType == "quadratic") {
             newAngleValue = convertOnQuadraticScale(newAngle);

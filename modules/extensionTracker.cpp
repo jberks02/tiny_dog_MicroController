@@ -31,17 +31,23 @@ class ExtensionTracker {
     public:
     ExtensionTracker(
         string name,
-        vector<vector<float>> yzPlane,
-        vector<vector<float>> xzPlane,
         vector<float> defaultCoordinate,
         // x, y z ordering on servos
         vector<PositioningServo> servos) {
-        yz = yzPlane;
-        xz = xzPlane;
+        yz = {
+        {servos[1].servoPosition[1], servos[1].servoPosition[2]},
+        {servos[2].servoPosition[1], servos[2].servoPosition[2]},
+        {defaultCoordinate[1], defaultCoordinate[2]}
+        };
+        xz = {
+        {servos[0].servoPosition[0], servos[0].servoPosition[2]},
+        {servos[1].servoPosition[0], servos[0].servoPosition[2]},
+        {defaultCoordinate[0], defaultCoordinate[2]}
+        };
         mServos = servos;
         coordinate = defaultCoordinate;
-        xzTriangle.setNewCoordinates(xzPlane);
-        yzTriangle.setNewCoordinates(yzPlane);
+        xzTriangle.setNewCoordinates(xz);
+        yzTriangle.setNewCoordinates(yz);
         this->name = name;
     }
     // always pass with ordering with x, then y
@@ -62,12 +68,8 @@ class ExtensionTracker {
         return cAngle;
     }
     // linear translations are only allowed for z axis and c side of triangle ensure
-    float findLinearTranslation(TriangleTracker* tri, float newLength, vector<float>* EEnewCoordinate) {
-        float previousDistanceToEndEffector;
-        previousDistanceToEndEffector = tri->sideLengths[2];
-        tri->setSideCLength(newLength);
-        tri->getNewEndEffectorCoordinate(EEnewCoordinate, previousDistanceToEndEffector);
-        return tri->triangleAngles[2];
+    coordinateChanges findLinearTranslation(TriangleTracker* tri, float newCSideLength, flatCoordinate* desiredPosition) {
+        return tri->calculateNewCoordinateChanges(newCSideLength, desiredPosition);
     }
 
     public:
@@ -118,34 +120,28 @@ class ExtensionTracker {
         vector<float> oldYzCoordinate = { coordinate.at(1), coordinate.at(2) };
         vector<float> newXzCoordinate = { newPoint->at(0), newPoint->at(2) };
         vector<float> newYzCoordinate = { newPoint->at(1), newPoint->at(2) };
-        vector<float> standardZero(coordinate);
+        flatCoordinate standardZero(coordinate[1], coordinate[2]);
 
-        float additionalArmLengthRequiredFromXSwing = 0.f;
+        float newXDistance = 0.f;
         if (newPoint->at(0) != coordinate[0]) {
             vector<float> xServoXZPosition = { mServos[0].servoPosition[0], mServos[0].servoPosition[2] };
             float newXSweepArmAngle = findRotationTranslation(xServoXZPosition, newXzCoordinate, coordinate);
-            float previousDistance = calculateDistance(mServos[0].servoPosition, oldXzCoordinate);
-            float newDistance = calculateDistance(mServos[0].servoPosition, newXzCoordinate);
-            additionalArmLengthRequiredFromXSwing = previousDistance - newDistance;
+            newXDistance = calculateDistance(xServoXZPosition, newXzCoordinate);
             //Assigning X Servo
             mServos[0].currentAngle = mServos[0].convert(coordinate[0], newXzCoordinate[0], newXSweepArmAngle);
         }
         else mServos[0].currentAngle = mServos[0].defaultAngle;
 
-        vector<float> originForArmLengthCalculation = { mServos[1].servoPosition[1], mServos[1].servoPosition[2] };
-        float distanceToNewPoint = calculateDistance(originForArmLengthCalculation, newYzCoordinate);
-        float newLength = distanceToNewPoint > additionalArmLengthRequiredFromXSwing ? distanceToNewPoint : additionalArmLengthRequiredFromXSwing;
-        if (newLength != yzTriangle.sideLengths[2]) {
-            float newZAngle = findLinearTranslation(&yzTriangle, newLength, &standardZero);
-            //Z Servo Assignment
-            mServos[2].currentAngle = mServos[2].convert(coordinate[2], newYzCoordinate[2], abs(newZAngle - mServos[2].defaultAngle));
-        }
-        else mServos[2].currentAngle = mServos[2].defaultAngle;
+        vector<float> yzRotationOrigin = { mServos[1].servoPosition[1], mServos[1].servoPosition[2] };
+        float distanceToNewPoint = calculateDistance(yzRotationOrigin, newYzCoordinate);
+        float newLength = distanceToNewPoint > newXDistance ? distanceToNewPoint : newXDistance;
+        coordinateChanges movementUpdates = yzTriangle.calculateNewCoordinateChanges(newLength, &standardZero);
+        //Z Servo Assignment
+        mServos[2].currentAngle = mServos[2].convert(coordinate[2], newPoint->at(2), movementUpdates.rotationTotal);//abs(newZAngle - mServos[2].defaultAngle));
 
-
-        vector<float> originForArmYSwingCalculation = { mServos[1].servoPosition[1], mServos[1].servoPosition[2] };
-        float newYAngle = findRotationTranslation(originForArmYSwingCalculation, newYzCoordinate, oldYzCoordinate);
+        float newYAngle = findRotationTranslation(yzRotationOrigin, newYzCoordinate, { movementUpdates.newPosition.x, movementUpdates.newPosition.y });
         //Y Servo Assignment
-        mServos[1].currentAngle = mServos[1].convert(standardZero[0], newYzCoordinate[0], newYAngle);
+        mServos[1].currentAngle = mServos[1].convert(coordinate[1], newPoint->at(1), newYAngle);//(newYAngle - mServos[1].defaultAngle));// - mServos[1].defaultAngle
+
     }
 };

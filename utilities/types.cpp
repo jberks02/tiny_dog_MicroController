@@ -13,12 +13,8 @@ struct ExtensionTrackerArgs {
         name = jsonArg.get("name").get<string>();
         picojson::value defaultCoordinateList = jsonArg.get("defaultCoordinate");
         picojson::value servoIntList = jsonArg.get("servos");
-        picojson::value xzPlaneJson = jsonArg.get("xzPlane");
-        picojson::value yzPlaneJson = jsonArg.get("yzPlane");
         parseNumberArrayToFloatVector(defaultCoordinateList, &defaultCoordinate);
         parseNumberArrayToFloatVector(servoIntList, &servos);
-        parseCoordinateListFromJsonArray(xzPlaneJson, &xzPlane);
-        parseCoordinateListFromJsonArray(yzPlaneJson, &yzPlane);
     }
 };
 
@@ -81,4 +77,40 @@ struct SeriesCommandArgs {
         seriesName = jsonArg.get("seriesName").get<string>();
         iterations = jsonArg.get("iterations").get<double>();
     }
+};
+
+struct flatCoordinate {
+    public:
+    float x;
+    float y;
+    flatCoordinate(float xCoordinate = 0.f, float yCoordinate = 0.f) {
+        x = xCoordinate;
+        y = yCoordinate;
+    }
+};
+
+struct d3Coordinate {
+    public:
+    float x;
+    float y;
+    float z;
+    d3Coordinate(float xCoordinate, float yCoordinate, float zCoordinate) {
+        x = xCoordinate;
+        y = yCoordinate;
+        z = zCoordinate;
+    }
+};
+
+struct coordinateChanges {
+    public:
+    float rotationTotal;
+    float rotationChange;
+    flatCoordinate newPosition;
+    coordinateChanges(float rt, float rc, flatCoordinate* coord) {
+        rotationTotal = rt;
+        rotationChange = rc;
+        newPosition.x = coord->x;
+        newPosition.y = coord->y;
+    }
+
 };
