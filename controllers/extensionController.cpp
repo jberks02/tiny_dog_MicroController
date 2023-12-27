@@ -5,6 +5,7 @@ class ExtensionController {
     public:
     vector<ExtensionTracker> endEffectors;
     vector<extensionSeriesCommand> extensionSeriesCall;
+    vector<PositioningServo> motors;
     PCA9685* servoController = NULL;
     bool clearing = false;
     bool inUse = false;
@@ -30,6 +31,7 @@ class ExtensionController {
         }
         endEffectors.clear();
         extensionSeriesCall.clear();
+        motors.clear();
         clearing = false;
     }
     void setServoController(PCA9685* servoController) {

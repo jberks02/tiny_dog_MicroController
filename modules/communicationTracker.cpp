@@ -1,36 +1,44 @@
 #include "../main.h"
 using namespace std;
-using translationFunc = function<void(picojson::value)>;
+using translationFunc = function<void(picojson::value, ExtensionController*)>;
 
 bool pause_updates = false;
 bool updates_occurring = false;
 string loadedWrite = "";
 string lastRead;
 bool clear = false;
-vector<PositioningServo> servos;
-vector<MovementSeries> movementSeriesList;
-vector<extensionCommand> commands;
-vector<ExtensionTrackerArgs> ExtensionTrackerList;
-vector<extensionSeriesCommand> seriesCommands;
+// vector<PositioningServo> servos;
+// vector<MovementSeries> movementSeriesList;
+// vector<extensionCommand> commands;
+// vector<ExtensionTrackerArgs> ExtensionTrackerList;
+// vector<extensionSeriesCommand> seriesCommands;
 
-void setupExtensionTracker(picojson::value json) {
+void setupExtensionTracker(picojson::value json, ExtensionController* controller) {
     ExtensionTrackerArgs argStruct(json);
     for (auto& servoIndex : argStruct.servos) {
-        if (servos.size() < servoIndex)
+        if (controller->motors.size() < servoIndex)
             throw "Positioning Servo is missing from list" + to_string(servoIndex);
     }
-    ExtensionTrackerList.push_back(argStruct);
+    ExtensionTracker zeroIndexTracker(argStruct.name,
+        argStruct.defaultCoordinate,
+        { controller->motors[argStruct.servos[0]],
+         controller->motors[argStruct.servos[1]],
+         controller->motors[argStruct.servos[2]] });
+
+    controller->setNewExtensionTracker(zeroIndexTracker);
+
 }
-void processNewMotor(picojson::value json) {
+void processNewMotor(picojson::value json, ExtensionController* controller) {
     PositioningServoArgs argStruct(json);
 
     PositioningServo newMotor(
         argStruct.servoIndex, argStruct.movementType, argStruct.defaultAngle,
         argStruct.servoPosition, argStruct.conversionType,
         argStruct.inverted, argStruct.motorType);
-    servos.push_back(newMotor);
+
+    controller->motors.push_back(newMotor);
 }
-void newMovementSeries(picojson::value json) {
+void newMovementSeries(picojson::value json, ExtensionController* controller) {
 
     MovementSeriesArgs argStruct(json);
 
@@ -40,43 +48,42 @@ void newMovementSeries(picojson::value json) {
 
     newSet.increaseResolution(resolutionMultiplication);
 
-    movementSeriesList.push_back(newSet);
+    controller->setNewMovementSeriesForExtension(newSet.name, newSet);
 }
-void processPositionCommand(picojson::value json) {
+void processPositionCommand(picojson::value json, ExtensionController* controller) {
 
     ExtensionCommandArgs argStruct(json);
 
     extensionCommand command(argStruct.name, argStruct.coordinate, argStruct.postDelay);
 
-    commands.push_back(command);
+    controller->setExtensionToPoint(command);
 }
-void processExtensionSeriesCall(picojson::value json) {
+void processExtensionSeriesCall(picojson::value json, ExtensionController* controller) {
 
     SeriesCommandArgs argStruct(json);
 
     extensionSeriesCommand seriesCommand(argStruct.name, argStruct.seriesName, argStruct.iterations);
 
-    seriesCommands.push_back(seriesCommand);
+    controller->prepareNextSeries(seriesCommand);
 }
 
-void createMotorOutputToRead(picojson::value _parsedCom) {
+void createMotorOutputToRead(picojson::value _parsedCom, ExtensionController* controller) {
     loadedWrite.clear();
     loadedWrite = "{ \"positioningMotors\": [";
 
-    for (int i = 0; i < servos.size(); i++) {
+    for (int i = 0; i < controller->motors.size(); i++) {
         string jsonOfMotor;
-        servos[i].getJsonStringOfClass(&jsonOfMotor);
+        controller->motors[i].getJsonStringOfClass(&jsonOfMotor);
         loadedWrite.append(jsonOfMotor);
-        if (i < servos.size() - 1) {
+        if (i < controller->motors.size() - 1) {
             loadedWrite.append(",");
         }
     }
     loadedWrite.append("]}");
 };
 
-void clearAllItems(picojson::value command) {
-    servos.clear();
-    clear = true;
+void clearAllItems(picojson::value command, ExtensionController* controller) {
+    controller->clearAllItems();
 }
 
 
@@ -89,43 +96,32 @@ map<string, translationFunc> commandMapping{
     {"DELETEALLSTRUCTURES", clearAllItems},
     {"READMOTORS", createMotorOutputToRead}
 };
-int process_command(string jsonString, int commandLength) {
+
+int process_command(string jsonString, int commandLength, ExtensionController* controller) {
     try {
-
         int passcode = 0;
-
         replace(jsonString.begin(), jsonString.end(), '\u0002', ' ');
         replace(jsonString.begin(), jsonString.end(), '\u0003', ' ');
-
         updates_occurring = true;
-
         lastRead = lastRead + jsonString;
-
         picojson::value parsedCommand;
-
         string parsingError = picojson::parse(parsedCommand, jsonString);
-
         if (!parsingError.empty()) {
-            // loadedWrite = '\u0002' + "{\"failure\": \"" + parsingError + "\"}\u0003";
             throw parsingError;
         }
-
-
-
         if (parsedCommand.is<picojson::object>()) {
             string command = parsedCommand.get("command").get<string>();
-            commandMapping[command](parsedCommand);
-        } else if (parsedCommand.is<picojson::array>()) {
+            commandMapping[command](parsedCommand, controller);
+        }
+        else if (parsedCommand.is<picojson::array>()) {
             picojson::array& listFromReceivedString = parsedCommand.get<picojson::array>();
             for (picojson::array::const_iterator i = listFromReceivedString.begin(); i != listFromReceivedString.end(); ++i) {
                 if (i->is<picojson::object>()) {
                     string command = i->get("command").get<string>();
-                    commandMapping[command](*i);
+                    commandMapping[command](*i, controller);
                 }
             }
         }
-            // throw "Sent value is not a proper value";
-
         updates_occurring = false;
         return passcode;
     } catch (...) {

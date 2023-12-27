@@ -41,9 +41,9 @@
 #include "./utilities/utilityClasses.cpp"
 #include "./modules/TriangleTracker.cpp"
 #include "./modules/extensionTracker.cpp"
-#include "./modules/communicationTracker.cpp"
 #include "./controllers/PCA9685.cpp"
 #include "./controllers/extensionController.cpp"
+#include "./modules/communicationTracker.cpp"
 #include "./controllers/spiModule.cpp"
 #include "./inputs/adcInputs.cpp"
 #ifdef __cplusplus
