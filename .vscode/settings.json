@@ -4,6 +4,7 @@
     },
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "files.associations": {
+        "MLTable": "yaml",
         "*.embeddedhtml": "html",
         "vector": "cpp",
         "initializer_list": "cpp",
@@ -18,7 +19,9 @@
         "tuple": "cpp",
         "utility": "cpp",
         "variant": "cpp",
-        "string_view": "cpp"
+        "string_view": "cpp",
+        "unordered_map": "cpp",
+        "system_error": "cpp"
     },
     "C_Cpp.errorSquiggles": "enabled",
     "C_Cpp.default.intelliSenseMode": "gcc-arm",

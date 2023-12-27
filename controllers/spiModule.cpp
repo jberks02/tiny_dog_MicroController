@@ -22,12 +22,7 @@ class SpiInterface {
             printf("Failure to initialize spi bus");
         }
     }
-    void setToSlave() {
-        // spi_set_slave(spi0, true);
-    }
-    void transferBytes(string* message, bool* updateIncoming) {
-        // if (spi_is_readable(spi0) == false) return;
-        // if (message->size() > 10000) return;
+    string transferBytes(string* message, bool* updateIncoming) {
         try {
             char lengthDst[5];
             char lengthSrc[5];
@@ -50,12 +45,12 @@ class SpiInterface {
                 writeSet[c] = message->at(c);
             };
             spi_write_read_blocking(spi0, (uint8_t*)writeSet, (uint8_t*)readSet, transferLength);
-            // sleep_ms(500);
             string readable(readSet);
             printf(readSet);
-            process_command(readable, readable.size());
+            return readable;
         } catch (...) {
             printf("Error thrown in spi transfer");
+            return "";
         }
     }
 };
