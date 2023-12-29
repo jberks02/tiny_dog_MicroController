@@ -65,7 +65,7 @@ class ExtensionController {
     void setExtensionToPoint(extensionCommand command) {
         for (auto& effector : endEffectors) {
             if (effector.name == command.name) {
-                effector.setMotorAnglesForNewPoint(&command.coordinate);
+                effector.threeDOFInverseKinematics(&command.coordinate);
             }
         }
     }

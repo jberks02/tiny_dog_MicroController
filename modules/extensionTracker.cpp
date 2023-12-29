@@ -10,15 +10,11 @@ using namespace std;
 //{(0,125,0), (0,125,0), (0,125,-33)} default servo coordinates
 class ExtensionTracker {
     private:
-    vector<vector<float>> yz;
-    vector<vector<float>> xz;
-    vector<float> ServoAngles;
-    TriangleTracker xzTriangle = TriangleTracker({ {2.f, 0.f}, {1.f, 2.f}, {0.f, 0.f} });
-    TriangleTracker yzTriangle = TriangleTracker({ {2.f, 0.f}, {1.f, 2.f}, {0.f, 0.f} });
-    // vector<servoCommand> servoCalls;
     uint64_t startUp = time_us_64();
     vector<float> coordinate;
-
+    float link1;
+    float link2;
+    float link3;
     public:
     vector<PositioningServo> mServos;
     vector<MovementSeries> MovementSets;
@@ -32,46 +28,14 @@ class ExtensionTracker {
     ExtensionTracker(
         string name,
         vector<float> defaultCoordinate,
-        // x, y z ordering on servos
         vector<PositioningServo> servos) {
-        yz = {
-        {servos[1].servoPosition[1], servos[1].servoPosition[2]},
-        {servos[2].servoPosition[1], servos[2].servoPosition[2]},
-        {defaultCoordinate[1], defaultCoordinate[2]}
-        };
-        xz = {
-        {servos[0].servoPosition[0], servos[0].servoPosition[2]},
-        {servos[1].servoPosition[0], servos[0].servoPosition[2]},
-        {defaultCoordinate[0], defaultCoordinate[2]}
-        };
         mServos = servos;
         coordinate = defaultCoordinate;
-        xzTriangle.setNewCoordinates(xz);
-        yzTriangle.setNewCoordinates(yz);
         this->name = name;
+        link1 = calculateDistance({ servos[0].servoPosition[1], servos[0].servoPosition[2] }, { servos[1].servoPosition[1], servos[1].servoPosition[2] });
+        link2 = calculateDistance({ servos[1].servoPosition[1], servos[1].servoPosition[2] }, { servos[2].servoPosition[1], servos[2].servoPosition[2] });
+        link3 = calculateDistance({ servos[2].servoPosition[1], servos[2].servoPosition[2] }, { defaultCoordinate[1], defaultCoordinate[2] });
     }
-    // always pass with ordering with x, then y
-    private:
-    float calculateDistance(vector<float> positionOne, vector<float> positionTwo) {
-        float subtractOne = positionOne[0] - positionTwo[0];
-        float subtractTwo = positionOne[1] - positionTwo[1];
-        float squaredOne = subtractOne * subtractOne;
-        float squareTwo = subtractTwo * subtractTwo;
-        float finalBeforeSquare = squaredOne + squareTwo;
-        return sqrt(finalBeforeSquare);
-    }
-    float findRotationTranslation(vector<float> rotationPoint, vector<float> destination, vector<float> origin) {
-        float sideA = calculateDistance(rotationPoint, destination);
-        float sideB = calculateDistance(rotationPoint, origin);
-        float sideC = calculateDistance(origin, destination);
-        float cAngle = calculateCAngleFromSides(sideA, sideB, sideC);
-        return cAngle;
-    }
-    // linear translations are only allowed for z axis and c side of triangle ensure
-    coordinateChanges findLinearTranslation(TriangleTracker* tri, float newCSideLength, flatCoordinate* desiredPosition) {
-        return tri->calculateNewCoordinateChanges(newCSideLength, desiredPosition);
-    }
-
     public:
     void addNewExtensionCommand(extensionCommand newCoordinate) {
 
@@ -107,41 +71,37 @@ class ExtensionTracker {
         float servoAngles[3] = { mServos[0].currentAngle, mServos[1].currentAngle, mServos[2].currentAngle };
         if (now > nextCall) {
             currentPosition = extensionCalls[0].coordinate;
-            setMotorAnglesForNewPoint(&extensionCalls[0].coordinate);
+            threeDOFInverseKinematics(&extensionCalls[0].coordinate);
             extensionCalls.erase(extensionCalls.begin());
-            cout << servoAngles[0] << servoAngles[1] << servoAngles[2] << endl;
         };
     }
     void addMovementSeries(MovementSeries newMove) {
         MovementSets.push_back(newMove);
     }
-    void setMotorAnglesForNewPoint(vector<float>* newPoint) {
-        vector<float> oldXzCoordinate = { coordinate.at(0), coordinate.at(2) };
-        vector<float> oldYzCoordinate = { coordinate.at(1), coordinate.at(2) };
-        vector<float> newXzCoordinate = { newPoint->at(0), newPoint->at(2) };
-        vector<float> newYzCoordinate = { newPoint->at(1), newPoint->at(2) };
-        flatCoordinate standardZero(coordinate[1], coordinate[2]);
-
-        float newXDistance = 0.f;
-        if (newPoint->at(0) != coordinate[0]) {
-            vector<float> xServoXZPosition = { mServos[0].servoPosition[0], mServos[0].servoPosition[2] };
-            float newXSweepArmAngle = findRotationTranslation(xServoXZPosition, newXzCoordinate, coordinate);
-            newXDistance = calculateDistance(xServoXZPosition, newXzCoordinate);
-            //Assigning X Servo
-            mServos[0].currentAngle = mServos[0].convert(coordinate[0], newXzCoordinate[0], newXSweepArmAngle);
-        }
-        else mServos[0].currentAngle = mServos[0].defaultAngle;
-
-        vector<float> yzRotationOrigin = { mServos[1].servoPosition[1], mServos[1].servoPosition[2] };
-        float distanceToNewPoint = calculateDistance(yzRotationOrigin, newYzCoordinate);
-        float newLength = distanceToNewPoint > newXDistance ? distanceToNewPoint : newXDistance;
-        coordinateChanges movementUpdates = yzTriangle.calculateNewCoordinateChanges(newLength, &standardZero);
-        //Z Servo Assignment
-        mServos[2].currentAngle = mServos[2].convert(coordinate[2], newPoint->at(2), movementUpdates.rotationTotal);//abs(newZAngle - mServos[2].defaultAngle));
-
-        float newYAngle = findRotationTranslation(yzRotationOrigin, newYzCoordinate, { movementUpdates.newPosition.x, movementUpdates.newPosition.y });
-        //Y Servo Assignment
-        mServos[1].currentAngle = mServos[1].convert(coordinate[1], newPoint->at(1), newYAngle);//(newYAngle - mServos[1].defaultAngle));// - mServos[1].defaultAngle
-
+    void threeDOFInverseKinematics(vector<float>* newPoint) {
+        float xzViewVectors[2] = { abs((newPoint->at(2) - mServos[0].servoPosition[2])), abs((newPoint->at(0) - mServos[0].servoPosition[0])) };
+        float yTotalDistance = abs(newPoint->at(1) - mServos[0].servoPosition[1]);
+        // Step 1
+        // theta one is returned in radians
+        float thetaOne = convertRadiansToDegrees(inverseTangentOfDivision(xzViewVectors[1], xzViewVectors[0]));
+        float r1 = hypotenuse(xzViewVectors[0], xzViewVectors[1]);
+        float r2 = yTotalDistance - link1;
+        // Step 2
+        float r3 = hypotenuse(r1, r2);
+        if (r3 > link2 + link3) r3 = link2 + link3 - 1;
+        // returns in radians
+        float theeTwo = inverseTangentOfDivision(r2, r1);
+        //Step 3
+        float theeThree = triangleAngleUsingInverseCosine(r3, link2, link3);
+        float theeOne = triangleAngleUsingInverseCosine(link3, link2, r3);
+        //Step 4
+        float thetaThree = 180.f - convertRadiansToDegrees(theeThree);
+        float thetaTwo = convertRadiansToDegrees(theeTwo - theeOne);
+        //rectify thetas to servo Motors
+        mServos[0].currentAngle = newPoint->at(0) > coordinate[0] ? 90.f - thetaOne : 90.f + thetaOne;
+        // mServos[1].currentAngle = 90.f + thetaTwo;
+        mServos[1].currentAngle = abs(thetaTwo);
+        mServos[2].currentAngle = abs(thetaThree);
+        cout << thetaOne << thetaTwo << thetaThree << r1 << r2 << r3 << theeOne << theeTwo << theeThree << endl;
     }
 };

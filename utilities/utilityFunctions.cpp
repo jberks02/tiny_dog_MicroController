@@ -1,16 +1,7 @@
 #include "../main.h"
 using namespace std;
 
-float calculateCAngleFromSides(float a, float b, float c) {
-    // broken out into steps to make readable
-    float numerator = pow(a, 2) + pow(b, 2) - pow(c, 2);
-    float denominator = 2 * a * b;
-    float divisionResult = numerator / denominator;
-    float degreeOfAdjacentAngle = acos(divisionResult);
-    float degreeConversion = degreeOfAdjacentAngle * (180 / 3.1415);
-    return degreeConversion; // * (180 / 3.1415) turns radians into degrees.
-}
-
+// sqrt((positionOne[0] – positionTwo[0])² + (positionOne[1] - positionTwo[1])²)
 float calculateDistance(vector<float> positionOne, vector<float> positionTwo) {
     float subtractOne = positionOne[0] - positionTwo[0];
     float subtractTwo = positionOne[1] - positionTwo[1];
@@ -18,6 +9,30 @@ float calculateDistance(vector<float> positionOne, vector<float> positionTwo) {
     float squareTwo = subtractTwo * subtractTwo;
     float finalBeforeSquare = squaredOne + squareTwo;
     return sqrt(finalBeforeSquare);
+}
+//tan^-1(numerator/denominator)
+float inverseTangentOfDivision(float numerator, float denominator) {
+    if (numerator == 0.f || denominator == 0.f) return 0.f;
+    float res = numerator / denominator;
+    return atan(res);
+}
+// cos^-1(factorOne²-factorTwo²-factorThree²/(-2*factorTwo*factorThree))
+float triangleAngleUsingInverseCosine(float factorOne, float factorTwo, float factorThree) {
+    float numerator = pow(factorOne, 2.f) - pow(factorTwo, 2.f) - pow(factorThree, 2.f);
+    float denominator = -2.f * factorTwo * factorThree;
+    float dividend = numerator / denominator;
+    return acos(dividend);
+}
+// sqrt(side1²+side2²)
+float hypotenuse(float side1, float side2) {
+    float sqr1 = pow(side1, 2.f);
+    float sqr2 = pow(side2, 2.f);
+    float additive = sqr1 + sqr2;
+    return sqrt(additive);
+}
+
+float convertRadiansToDegrees(float radians) {
+    return radians * (180 / M_PI);
 }
 
 void parseNumberArrayToFloatVector(picojson::value coordJson, vector<float>* list) {
@@ -41,26 +56,13 @@ void parseCoordinateListFromJsonArray(picojson::value coordJsonList, vector<vect
     }
 }
 
-void convertInt32ToUint8Array(uint8_t* list, int value) {
-    list[0] = (value >> 24) & 0xFF;
-    list[1] = (value >> 16) & 0xFF;
-    list[2] = (value >> 8) & 0xFF;
-    list[3] = (value >> 0) & 0xFF;
-};
-
-uint convertByteArrayToInt(uint8_t* list) {
-    uint value;
-    memcpy(&value, list, sizeof(int));
-    return value;
-}
-
 string returnArrayOfJsonsFromList(vector<string>* jsons) {
     stringstream result;
     int endOfList = jsons->size();
     result << "[";
-    for(int i = 0; i < endOfList; i++) {
+    for (int i = 0; i < endOfList; i++) {
         result << jsons->at(i);
-        if(i + 1 < endOfList) result << ",";
+        if (i + 1 < endOfList) result << ",";
     }
     result << "]";
     return result.str();
