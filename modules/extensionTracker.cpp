@@ -78,30 +78,29 @@ class ExtensionTracker {
     void addMovementSeries(MovementSeries newMove) {
         MovementSets.push_back(newMove);
     }
+    //Refer to readme, inverse kinematic diagram and values match the summary in the modeling section
+    //b in the diagram is always zero because our x motor is our point of origin. 
     void threeDOFInverseKinematics(vector<float>* newPoint) {
-        float xzViewVectors[2] = { abs((newPoint->at(2) - mServos[0].servoPosition[2])), abs((newPoint->at(0) - mServos[0].servoPosition[0])) };
-        float yTotalDistance = abs(newPoint->at(1) - mServos[0].servoPosition[1]);
-        // Step 1
-        // theta one is returned in radians
-        float thetaOne = convertRadiansToDegrees(inverseTangentOfDivision(xzViewVectors[1], xzViewVectors[0]));
-        float r1 = hypotenuse(xzViewVectors[0], xzViewVectors[1]);
-        float r2 = yTotalDistance - link1;
-        // Step 2
-        float r3 = hypotenuse(r1, r2);
-        if (r3 > link2 + link3) r3 = link2 + link3 - 1;
-        // returns in radians
-        float theeTwo = inverseTangentOfDivision(r2, r1);
-        //Step 3
-        float theeThree = triangleAngleUsingInverseCosine(r3, link2, link3);
-        float theeOne = triangleAngleUsingInverseCosine(link3, link2, r3);
-        //Step 4
-        float thetaThree = 180.f - convertRadiansToDegrees(theeThree);
-        float thetaTwo = convertRadiansToDegrees(theeTwo - theeOne);
-        //rectify thetas to servo Motors
-        mServos[0].currentAngle = newPoint->at(0) > coordinate[0] ? 90.f - thetaOne : 90.f + thetaOne;
-        // mServos[1].currentAngle = 90.f + thetaTwo;
-        mServos[1].currentAngle = abs(thetaTwo);
-        mServos[2].currentAngle = abs(thetaThree);
-        cout << thetaOne << thetaTwo << thetaThree << r1 << r2 << r3 << theeOne << theeTwo << theeThree << endl;
+        //Calculate Quotient One
+        flatCoordinate xyPlaneCoordinate(newPoint->at(0), newPoint->at(1));
+        float motorZeroAngle = inverseTangent2(&xyPlaneCoordinate);
+        //Calculate theta 3 and establish y z plane values;
+        float PQ = hypotenuse(xyPlaneCoordinate.x, xyPlaneCoordinate.y);
+        float SQ = newPoint->at(2) - link1;
+        float PS = calculateSideViewTrianglesLongSide(&xyPlaneCoordinate, newPoint->at(2), link1);
+        float motorTwoAngle = inverseCosineOfInnerTriangle(PS, link2, link3);
+        // Calculate theta 2 using results from theta 3
+        // theta 3 = alpha - beta
+        flatCoordinate alphaSet(PQ, SQ);
+        float alpha = inverseTangent2(&alphaSet);
+        float s3L3 = rightTriOppositeSideLength(link3, motorTwoAngle, false);
+        float c3L3 = rightTriAdjacentSideLength(link3, motorTwoAngle, false);
+        flatCoordinate betaSet(link2 + c3L3, s3L3);
+        float beta = inverseTangent2(&betaSet);
+        float motorOneAngle = alpha - beta;
+        // Assign angles
+        mServos[0].currentAngle = abs(motorZeroAngle);
+        mServos[1].currentAngle = 90.f + motorOneAngle;
+        mServos[2].currentAngle = motorTwoAngle;
     }
 };

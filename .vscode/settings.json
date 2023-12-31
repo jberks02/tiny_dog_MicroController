@@ -21,10 +21,12 @@
         "variant": "cpp",
         "string_view": "cpp",
         "unordered_map": "cpp",
-        "system_error": "cpp"
+        "system_error": "cpp",
+        "cmath": "cpp"
     },
     "C_Cpp.errorSquiggles": "enabled",
     "C_Cpp.default.intelliSenseMode": "gcc-arm",
     "C_Cpp.inlayHints.autoDeclarationTypes.enabled": true,
-    "C_Cpp.intelliSenseEngineFallback": "enabled"
+    "C_Cpp.intelliSenseEngineFallback": "enabled",
+    "cortex-debug.variableUseNaturalFormat": false
 }
