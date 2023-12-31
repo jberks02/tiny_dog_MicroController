@@ -43,7 +43,7 @@ void newMovementSeries(picojson::value json, ExtensionController* controller) {
 
     newSet.increaseResolution(resolutionMultiplication);
 
-    controller->setNewMovementSeriesForExtension(newSet.name, newSet);
+    controller->setNewMovementSeriesForExtension(newSet);
 }
 void processPositionCommand(picojson::value json, ExtensionController* controller) {
 
