@@ -1,6 +1,39 @@
 #include "../main.h"
 using namespace std;
 
+void parseNumberArrayToFloatVector(picojson::value coordJson, vector<float>* list) {
+    const picojson::array& defaultCoordAlias = coordJson.get<picojson::array>();
+    for (auto i = defaultCoordAlias.begin();i != defaultCoordAlias.end();++i) {
+        float coord = i->get<double>();
+        list->push_back(coord);
+    }
+}
+
+void parseCoordinateListFromJsonArray(picojson::value coordJsonList, vector<vector<float>>* list) {
+    const picojson::array& NestedAlias = coordJsonList.get<picojson::array>();
+    for (auto vec = NestedAlias.begin(); vec != NestedAlias.end(); ++vec) {
+        vector<float> coordinate;
+        const picojson::array& coord = vec->get<picojson::array>();
+        for (auto single = coord.begin(); single != coord.end(); single++) {
+            float axis = single->get<double>();
+            coordinate.push_back(axis);
+        }
+        list->push_back(coordinate);
+    }
+}
+
+string returnArrayOfJsonsFromList(vector<string>* jsons) {
+    stringstream result;
+    int endOfList = jsons->size();
+    result << "[";
+    for (int i = 0; i < endOfList; i++) {
+        result << jsons->at(i);
+        if (i + 1 < endOfList) result << ",";
+    }
+    result << "]";
+    return result.str();
+}
+
 struct ExtensionTrackerArgs {
     public:
     string name;

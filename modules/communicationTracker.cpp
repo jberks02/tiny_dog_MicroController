@@ -7,11 +7,6 @@ bool updates_occurring = false;
 string loadedWrite = "";
 string lastRead;
 bool clear = false;
-// vector<PositioningServo> servos;
-// vector<MovementSeries> movementSeriesList;
-// vector<extensionCommand> commands;
-// vector<ExtensionTrackerArgs> ExtensionTrackerList;
-// vector<extensionSeriesCommand> seriesCommands;
 
 void setupExtensionTracker(picojson::value json, ExtensionController* controller) {
     ExtensionTrackerArgs argStruct(json);
@@ -48,7 +43,7 @@ void newMovementSeries(picojson::value json, ExtensionController* controller) {
 
     newSet.increaseResolution(resolutionMultiplication);
 
-    controller->setNewMovementSeriesForExtension(newSet.name, newSet);
+    controller->setNewMovementSeriesForExtension(newSet);
 }
 void processPositionCommand(picojson::value json, ExtensionController* controller) {
 

@@ -45,14 +45,11 @@ class ExtensionController {
         endEffectors.push_back(extt);
         return 0; // good return code
     }
-    int setNewMovementSeriesForExtension(string extension, MovementSeries newSeries) {
+    int setNewMovementSeriesForExtension(MovementSeries newSeries) {
         for (auto& effector : endEffectors) {
-            if (effector.name == extension) {
-                effector.MovementSets.push_back(newSeries);
-                return 0;
-            }
+            effector.MovementSets.push_back(newSeries);
         }
-        return 4; // extension not found
+        return 0;
     }
     void prepareNextSeries(extensionSeriesCommand com) {
         for (auto& effector : endEffectors) {
@@ -65,13 +62,12 @@ class ExtensionController {
     void setExtensionToPoint(extensionCommand command) {
         for (auto& effector : endEffectors) {
             if (effector.name == command.name) {
-                effector.setMotorAnglesForNewPoint(&command.coordinate);
+                effector.threeDOFInverseKinematics(&command.coordinate);
             }
         }
     }
     void runExtensions() {
         try {
-            // while (true) {
             while (clearing == true) {
                 tight_loop_contents();
             }
@@ -83,7 +79,6 @@ class ExtensionController {
                 }
             }
             inUse = false;
-            // }
         } catch (...) {
             printf("Extension Run Failed");
         }

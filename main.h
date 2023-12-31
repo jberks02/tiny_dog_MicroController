@@ -36,10 +36,9 @@
 #include "pico/multicore.h"
 
 //My HEADERS
-#include "./utilities/utilityFunctions.cpp"
 #include "./utilities/types.cpp"
+#include "./utilities/utilityFunctions.cpp"
 #include "./utilities/utilityClasses.cpp"
-#include "./modules/TriangleTracker.cpp"
 #include "./modules/extensionTracker.cpp"
 #include "./controllers/PCA9685.cpp"
 #include "./controllers/extensionController.cpp"

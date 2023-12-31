@@ -1,16 +1,7 @@
 #include "../main.h"
 using namespace std;
 
-float calculateCAngleFromSides(float a, float b, float c) {
-    // broken out into steps to make readable
-    float numerator = pow(a, 2) + pow(b, 2) - pow(c, 2);
-    float denominator = 2 * a * b;
-    float divisionResult = numerator / denominator;
-    float degreeOfAdjacentAngle = acos(divisionResult);
-    float degreeConversion = degreeOfAdjacentAngle * (180 / 3.1415);
-    return degreeConversion; // * (180 / 3.1415) turns radians into degrees.
-}
-
+// sqrt((positionOne[0] – positionTwo[0])² + (positionOne[1] - positionTwo[1])²)
 float calculateDistance(vector<float> positionOne, vector<float> positionTwo) {
     float subtractOne = positionOne[0] - positionTwo[0];
     float subtractTwo = positionOne[1] - positionTwo[1];
@@ -19,49 +10,71 @@ float calculateDistance(vector<float> positionOne, vector<float> positionTwo) {
     float finalBeforeSquare = squaredOne + squareTwo;
     return sqrt(finalBeforeSquare);
 }
-
-void parseNumberArrayToFloatVector(picojson::value coordJson, vector<float>* list) {
-    const picojson::array& defaultCoordAlias = coordJson.get<picojson::array>();
-    for (auto i = defaultCoordAlias.begin();i != defaultCoordAlias.end();++i) {
-        float coord = i->get<double>();
-        list->push_back(coord);
-    }
+float convertRadiansToDegrees(float radians) {
+    return radians * (180 / M_PI);
+}
+float convertDegreesToRadians(float degrees) {
+    return degrees * (M_PI / 180);
+}
+// atan2(y/x) returns angle in degrees
+float inverseTangent2(flatCoordinate* coord) {
+    if (coord->x == 0.f || coord->y == 0.f) return 0.f;
+    float radianResult = atan2(coord->y, coord->x);
+    float degreeResult = convertRadiansToDegrees(radianResult);
+    return degreeResult;
+}
+//tan^-1(numerator/denominator)
+float inverseTangentOfDivision(float numerator, float denominator) {
+    if (numerator == 0.f || denominator == 0.f) return 0.f;
+    float res = numerator / denominator;
+    return atan(res);
+}
+// cos^-1(factorOne²-factorTwo²-factorThree²/(-2*factorTwo*factorThree))
+float triangleAngleUsingInverseCosine(float factorOne, float factorTwo, float factorThree) {
+    float numerator = pow(factorOne, 2.f) - pow(factorTwo, 2.f) - pow(factorThree, 2.f);
+    float denominator = -2.f * factorTwo * factorThree;
+    float dividend = numerator / denominator;
+    return acos(dividend);
+}
+// sqrt(side1²+side2²)
+float hypotenuse(float side1, float side2) {
+    float sqr1 = pow(side1, 2.f);
+    float sqr2 = pow(side2, 2.f);
+    float additive = sqr1 + sqr2;
+    return sqrt(additive);
 }
 
-void parseCoordinateListFromJsonArray(picojson::value coordJsonList, vector<vector<float>>* list) {
-    const picojson::array& NestedAlias = coordJsonList.get<picojson::array>();
-    for (auto vec = NestedAlias.begin(); vec != NestedAlias.end(); ++vec) {
-        vector<float> coordinate;
-        const picojson::array& coord = vec->get<picojson::array>();
-        for (auto single = coord.begin(); single != coord.end(); single++) {
-            float axis = single->get<double>();
-            coordinate.push_back(axis);
-        }
-        list->push_back(coordinate);
-    }
+float calculateSideViewTrianglesLongSide(flatCoordinate* xyCoord, float z, float L1) {
+    float xSqr = pow(xyCoord->x, 2);
+    float ySqr = pow(xyCoord->y, 2);
+    float lengthSqr = pow((z - L1), 2);
+    float additive = xSqr + ySqr + lengthSqr;
+    return sqrt(additive);
 }
 
-void convertInt32ToUint8Array(uint8_t* list, int value) {
-    list[0] = (value >> 24) & 0xFF;
-    list[1] = (value >> 16) & 0xFF;
-    list[2] = (value >> 8) & 0xFF;
-    list[3] = (value >> 0) & 0xFF;
-};
-
-uint convertByteArrayToInt(uint8_t* list) {
-    uint value;
-    memcpy(&value, list, sizeof(int));
-    return value;
+// returns result in degrees
+float inverseCosineOfInnerTriangle(float PS, float L2, float L3) {
+    float numerator = pow(PS, 2.f) - pow(L2, 2.f) - pow(L3, 2.f);
+    float denominator = 2 * L3 * L2;
+    float dividend = numerator / denominator;
+    float radianAngleResult = acos(dividend);
+    float degreeResult = convertRadiansToDegrees(radianAngleResult);
+    return degreeResult;
 }
-
-string returnArrayOfJsonsFromList(vector<string>* jsons) {
-    stringstream result;
-    int endOfList = jsons->size();
-    result << "[";
-    for(int i = 0; i < endOfList; i++) {
-        result << jsons->at(i);
-        if(i + 1 < endOfList) result << ",";
-    }
-    result << "]";
-    return result.str();
+//returns opposite side length provided right triangle hypotenuse and adjacent angle
+//must inform function of whether angle is degrees or radians
+float rightTriOppositeSideLength(float hypotenuse, float adjacentAngle, bool angleIsInRadian) {
+    float angle = adjacentAngle;
+    if (angleIsInRadian == false) angle = convertDegreesToRadians(adjacentAngle);
+    float angleSin = sin(angle);
+    float oppositeSide = angleSin * hypotenuse;
+    return oppositeSide;
+}
+// returns adjacent side length provided right triangle hypotenuse and adjacent angle 
+float rightTriAdjacentSideLength(float hypotenuse, float adjacentAngle, bool angleIsInRadian) {
+    float angle = adjacentAngle;
+    if (angleIsInRadian == false) angle = convertDegreesToRadians(adjacentAngle);
+    float angleCos = cos(angle);
+    float adjacentSide = angleCos * hypotenuse;
+    return adjacentSide;
 }
