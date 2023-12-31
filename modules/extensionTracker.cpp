@@ -99,8 +99,8 @@ class ExtensionTracker {
         float beta = inverseTangent2(&betaSet);
         float motorOneAngle = alpha - beta;
         // Assign angles
-        mServos[0].currentAngle = abs(motorZeroAngle);
-        mServos[1].currentAngle = 90.f + motorOneAngle;
-        mServos[2].currentAngle = motorTwoAngle;
+        mServos[0].setServoAngle(newPoint->at(0) == 0 ? mServos[0].defaultAngle : abs(motorZeroAngle));
+        mServos[1].setServoAngle(90.f + motorOneAngle);
+        mServos[2].setServoAngle(motorTwoAngle);
     }
 };

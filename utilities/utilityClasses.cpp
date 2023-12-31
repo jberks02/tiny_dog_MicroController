@@ -67,52 +67,19 @@ class PositioningServo {
     }
 
     private:
-    float
-        defaultConversion(float defaultRelevantNumber, float newRelNumber, float newAngle) {
-        if (defaultRelevantNumber < newRelNumber) {
-            return defaultAngle + newAngle;
-        }
-        else {
-            return defaultAngle - newAngle;
-        }
+    void defaultConversion(float newAngle) {
+        if (inverted == true) currentAngle = 180 - newAngle;
+        currentAngle = newAngle;
     }
-    float convertOnQuadraticScale(float angle) {
-        float squaredArmAngle = pow(angle, 2.0);
-        float a = squaredArmAngle * (quadraticEquationFactors['a']);
-        float b = angle * quadraticEquationFactors['b'];
-        float c = quadraticEquationFactors['c'];
-        float product = a + b + c;
-        return product;
-    };
-    float convertLinear(float Angle) {
-        float product = Angle * linearFactors['m'];
-        return product + linearFactors['b'];
-    }
-    float convertExponential(float Angle) {
-        float exponent = Angle + exponentialFactors['c'];
-        float powered = pow(exponentialFactors['a'], exponent);
-        return powered + exponentialFactors['b'];
-    }
-
     public:
-    float convert(float endEffectorOriginPoint, float endEffectorNewPoint, float newAngle) {
+    void setServoAngle(float newAngle) {
         float newAngleValue;
         if (conversionType == "default") {
-            newAngleValue = defaultConversion(endEffectorOriginPoint, endEffectorNewPoint, newAngle);
-        }
-        else if (conversionType == "quadratic") {
-            newAngleValue = convertOnQuadraticScale(newAngle);
-        }
-        else if (conversionType == "linear") {
-            newAngleValue = convertLinear(newAngle);
-        }
-        else if (conversionType == "exponential") {
-            newAngleValue = convertExponential(newAngle);
+            defaultConversion(newAngle);
         }
         else {
-            newAngleValue = newAngle;
+            currentAngle = newAngle;
         }
-        return inverted == true ? 180 - newAngleValue : newAngleValue;
     }
     void setQuadraticFactors(map<char, float> factors) {
         quadraticEquationFactors['a'] = factors['a'];
@@ -129,10 +96,6 @@ class PositioningServo {
         exponentialFactors['c'] = factors['c'];
     }
     void getJsonStringOfClass(string* jsonString) {
-        // vector<float> servoPosition;
-        // map<char, float> quadraticEquationFactors{{'a', -0.02036}, {'b', 6.7478}, {'c', -214.8957}};
-        // map<char, float> linearFactors{{'m', 4.f}, {'b', 0}};
-        // map<char, float> exponentialFactors{{'a', 1.1}, {'b', -1}, {'c', -42}};
         string moveT(1, movementType);
         string inv = inverted == true ? "true" : "false";
         jsonString->append("{");

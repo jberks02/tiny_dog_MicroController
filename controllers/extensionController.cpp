@@ -71,7 +71,6 @@ class ExtensionController {
     }
     void runExtensions() {
         try {
-            // while (true) {
             while (clearing == true) {
                 tight_loop_contents();
             }
@@ -83,7 +82,6 @@ class ExtensionController {
                 }
             }
             inUse = false;
-            // }
         } catch (...) {
             printf("Extension Run Failed");
         }
