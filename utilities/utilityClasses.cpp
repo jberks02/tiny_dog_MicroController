@@ -68,8 +68,12 @@ class PositioningServo {
 
     private:
     void defaultConversion(float newAngle) {
-        if (inverted == true) currentAngle = 180 - newAngle;
-        currentAngle = newAngle;
+        if (inverted == true) {
+            currentAngle = 180 - newAngle;
+        }
+        else {
+            currentAngle = newAngle;
+        }
     }
     public:
     void setServoAngle(float newAngle) {
