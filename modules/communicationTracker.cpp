@@ -81,6 +81,15 @@ void clearAllItems(picojson::value command, ExtensionController* controller) {
     controller->clearAllItems();
 }
 
+void enterMaintenanceMode(picojson::value command, ExtensionController* controller) {
+    int numberOfExtensions = controller->endEffectors.size();
+    for (int extensionIndex = 0; extensionIndex < numberOfExtensions; extensionIndex++) {
+        int numberOfMotors = controller->endEffectors.at(extensionIndex).mServos.size();
+        for (int motorIndex = 0; motorIndex < numberOfMotors; motorIndex++) {
+            controller->endEffectors.at(extensionIndex).mServos.at(motorIndex).currentAngle = 90.f;
+        }
+    }
+}
 
 map<string, translationFunc> commandMapping{
     {"EXTENSIONTRACKER", setupExtensionTracker},
@@ -89,7 +98,8 @@ map<string, translationFunc> commandMapping{
     {"POSITIONINGMOTOR", processNewMotor},
     {"EXTENSIONCOMMAND", processPositionCommand},
     {"DELETEALLSTRUCTURES", clearAllItems},
-    {"READMOTORS", createMotorOutputToRead}
+    {"READMOTORS", createMotorOutputToRead},
+    {"MAINTENANCEMODE", enterMaintenanceMode}
 };
 
 int process_command(string jsonString, int commandLength, ExtensionController* controller) {
